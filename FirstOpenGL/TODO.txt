@@ -1,0 +1,13 @@
+1. Add "Virtual Walls" Left, Right, Up and Down (-X, X, -Z, Z)
+2. Add Random Velocity to the balls (for test the collision only)
+ 2.1 Add "dragging" constant to slow down/until stop the balls.
+3. Add Colision Sphere-Sphere response (Change colour)
+4. Change Colision Sphere-Sphere response (Change direction)
+5. Add Control to White ball:
+ 5.1 Left/Right arrows for direction/angle, Print Angle to console
+ 5.2 Up/Down arrows for velocity, Print Velocity to console
+ 5.3 Spacebar to "shoot"
+6. Add Collision Sphere-Triangle(Change sphere colour)
+7. Change Colision Sphere-Triangle response (Change sphere direction)
+7. Add arrow to "display" the angle and velocity (waiting for Feeney's code)
+8. Add cue stick (attached to white ball, position is the inverse of the arrow)
