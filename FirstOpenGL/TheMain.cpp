@@ -37,7 +37,7 @@ int g_LightObjNumber = 0;				// light object vector position
 
 glm::vec3 CAMERASPEED = glm::vec3( 0.0f, 0.0f, 0.0f );
 static const int g_NUMBER_OF_LIGHTS = 5;
-static const float g_FRICTION_FORCE = 0.004;
+static const float g_FRICTION_FORCE = 0.01;
 
 bool bIsWireframe = false;
 
@@ -794,6 +794,39 @@ void PhysicsStep( double curTime, double deltaTime )
 
 		pCurGO->vel += deltaVelocity;
 
+		bool isThereMovement = false;
+		cGameObject* pTheCueGO;
+		if( index == 2 )		// ITS THE WHITE BALL!
+		{
+			for( int index_cue = 0; index_cue != ::g_vecGameObjects.size(); index_cue++ )
+			{
+				if( g_vecGameObjects[index_cue]->typeOfObject == eTypeOfObject::CUE )
+				{	// We found the CUE!
+					pTheCueGO = ::g_vecGameObjects[index_cue];
+				}
+				if( pCurGO->bIsUpdatedInPhysics )
+				{ // Check to see if the object is in movement
+					if( ::g_vecGameObjects[index_cue]->vel != glm::vec3( 0.0f, 0.0f, 0.0f ) )
+					{	// is in movement
+						isThereMovement = true;
+					}
+				}
+
+			}
+			if( pTheCueGO != NULL )
+			{
+				if( !isThereMovement )
+				{ // All balls are static, so we draw the cue next to the white ball
+				  // HACK, set position of cue depending on White ball position
+					pTheCueGO->position = pCurGO->position;
+				}
+				else
+				{ // At least one ball is in movement so we "hide away" the cue
+					pTheCueGO->position = glm::vec3( 0.0f, 100.0f, 0.0f );
+				}
+			}
+		}
+		
 		// HACK: Collision step
 		switch ( pCurGO->typeOfObject )
 		{

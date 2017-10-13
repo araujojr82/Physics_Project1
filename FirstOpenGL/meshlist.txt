@@ -3,3 +3,4 @@ poolsides   poolsides_xyz_n.ply
 sphere      Sphereply_xyz_n.ply
 lightsphere lightsphereply_xyz_n.ply
 ball        ball2_xyz_n.ply
+cue         cue2_xyz_n.ply

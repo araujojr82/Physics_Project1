@@ -12,6 +12,7 @@ enum eTypeOfObject
 	PLANE = 1,		// - it's a plane
 	CAPSULE = 2,    // - it's a capsule
 	AABB = 3,		// 3- it's an axis-aligned box
+	CUE = 4,
 	UNKNOWN = 99	// I don't know
 };
 
