@@ -920,34 +920,29 @@ void PhysicsStep( double curTime, double deltaTime )
 			// HACK (Ground is table (game object 0)
 			if ( ( pCurGO->position.y - pCurGO->radius ) <= ::g_vecGameObjects[0]->position.z)
 			{	// Object has "hit" the ground 
-				//pCurGO->diffuseColour = glm::vec4( 0.0f, 1.0f, 0.0f, 1.0f );
 				pCurGO->vel.y = +( fabs( pCurGO->vel.y ) );
 			}
 
 			if ( ( pCurGO->position.x + pCurGO->radius ) >= RIGHTSIDEWALL )
 			{	// Object too far to the right
 				// Object has penetrated the right plane
-				//pCurGO->diffuseColour = glm::vec4( 0.0f, 1.0f, 0.0f, 1.0f );
 				pCurGO->vel.x = -( fabs( pCurGO->vel.x ) );
 			}
 			if ( ( pCurGO->position.x - pCurGO->radius ) <= LEFTSIDEWALL )
 			{	// Object too far to the left
 				// Object has penetrated the left plane
-				//pCurGO->diffuseColour = glm::vec4( 0.0f, 1.0f, 0.0f, 1.0f );
 				pCurGO->vel.x = +( fabs( pCurGO->vel.x ) );
 			}
 
 			if ((pCurGO->position.z - pCurGO->radius) <= BACKSIDEWALL)
-			{	// Object too far to the left
-				// Object has penetrated the left plane
-				//pCurGO->diffuseColour = glm::vec4( 0.0f, 1.0f, 0.0f, 1.0f );
+			{	// Object too far to the back
+				// Object has penetrated the back plane
 				pCurGO->vel.z = +(fabs(pCurGO->vel.z));
 			}
 
 			if ((pCurGO->position.z + pCurGO->radius) >= FRONTSIDEWALL)
-			{	// Object too far to the right
-				// Object has penetrated the right plane
-				//pCurGO->diffuseColour = glm::vec4( 0.0f, 1.0f, 0.0f, 1.0f );
+			{	// Object too far to the front
+				// Object has penetrated the front plane
 				pCurGO->vel.z = -(fabs(pCurGO->vel.z));
 			}
 

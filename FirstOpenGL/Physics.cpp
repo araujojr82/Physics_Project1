@@ -24,24 +24,6 @@ bool PenetrationTestSphereSphere( cGameObject* pA, cGameObject* pB, double timeO
 
 void bounceSpheres( cGameObject* pA, cGameObject* pB )
 {
-
-	//Vec3 minus( const Vec3& v1, const Vec3& v2 ) {
-	//	Vec3 r;
-	//	r.x = v1.x - v2.x;
-	//	r.y = v1.y - v2.y;
-	//	r.z = v1.z - v2.z;
-	//	return r;
-	//}
-
-	//double dotProduct( const Vec3& v1, const Vec3& v2 ) {
-	//	return v1.x * v2.x + v1.y * v2.y + v1.z * v2.z;
-	//}
-
-	//int distanceSquared( const Vec3& v1, const Vec3& v2 ) {
-	//	Vec3 delta = minus( v2, v1 );
-	//	return dotProduct( delta, delta );
-	//}
-
 	glm::vec3 nv1; // new velocity for sphere 1
 	glm::vec3 nv2; // new velocity for sphere 2
 				// this can probably be optimised a bit, but it basically swaps the velocity amounts
