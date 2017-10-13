@@ -4,8 +4,11 @@ cGameObject::cGameObject()
 {
 	this->scale = 1.0f;	// (not zero)
 	this->position = glm::vec3(0.0f);
+	this->prevPosition = glm::vec3( 0.0f );
 	this->orientation = glm::vec3(0.0f);
 	this->orientation2 = glm::vec3(0.0f);
+	this->mass = 0.0f;
+	this->inverseMass = 0.0f;
 
 	this->vel = glm::vec3( 0.0f );
 	this->accel = glm::vec3( 0.0f );

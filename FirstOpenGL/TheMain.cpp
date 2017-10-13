@@ -37,6 +37,7 @@ int g_LightObjNumber = 0;				// light object vector position
 
 glm::vec3 CAMERASPEED = glm::vec3( 0.0f, 0.0f, 0.0f );
 static const int g_NUMBER_OF_LIGHTS = 5;
+static const float g_FRICTION_FORCE = 0.004;
 
 bool bIsWireframe = false;
 
@@ -45,7 +46,7 @@ std::vector< cGameObject* > g_vecGameObjects;
 
 
 glm::vec3 g_cameraXYZ = glm::vec3( 0.0f, 40.0f, 0.1f ); // Default top pool view
-//glm::vec3 g_cameraXYZ = glm::vec3(0.0f, 30.0f, 30.0f); // Side "horizontal"  view
+//glm::vec3 g_cameraXYZ = glm::vec3(0.0f, 0.2f, 30.0f); // Side "horizontal"  view
 glm::vec3 g_cameraTarget_XYZ = glm::vec3( 0.0f, 0.0f, 0.0f );
 
 // TODO include camera new code
@@ -67,10 +68,11 @@ public:
 void loadConfigFile( std::string fileName, sWindowConfig& wConfig );
 void loadLightObjects();
 
-void PhysicsStep( double deltaTime );
+void PhysicsStep( double curTime, double deltaTime );
 
 bool LoadModelsIntoScene(std::string &error);
 bool Load3DModelsIntoMeshManager(int shaderID, cVAOMeshManager* pVAOManager, std::string &error);
+float generateRandomNumber( float min, float max );
 
 //struct sGOparameters		// for the Game Objects' input file
 //{
@@ -103,8 +105,13 @@ static void key_callback( GLFWwindow* window, int key, int scancode, int action,
 	}
 
 	//// Change object in g_GameObject
-	//if( key == GLFW_KEY_SPACE && action == GLFW_PRESS )
-	//{
+	if( key == GLFW_KEY_SPACE && action == GLFW_PRESS )
+	{
+		//pTempGO->vel.x = 0.0f;
+		//::g_vecGameObjects[2]->vel.x = 10.0f;
+		::g_vecGameObjects[2]->vel.x = generateRandomNumber( 6.0f, 12.0f );
+		::g_vecGameObjects[2]->vel.z = generateRandomNumber( 6.0f, 12.0f );
+
 	//	if( g_GameObjNumber < ( ::g_vecGameObjects.size() - 1 ) ) {
 	//		g_GameObjNumber++;
 	//	}
@@ -112,7 +119,7 @@ static void key_callback( GLFWwindow* window, int key, int scancode, int action,
 	//	{
 	//		g_GameObjNumber = 0;
 	//	}
-	//}
+	}
 
 	// Change light colour
 	if( key == GLFW_KEY_C && action == GLFW_PRESS )
@@ -154,28 +161,52 @@ static void key_callback( GLFWwindow* window, int key, int scancode, int action,
 	switch( key )
 	{
 	case GLFW_KEY_UP:		// Up arrow
-		//::g_vecGameObjects[g_GameObjNumber]->position.y += 0.10f;
-		::g_pLightManager->vecLights[g_LightObjNumber].position.y += 0.10f;
+		::g_vecGameObjects[g_GameObjNumber]->position.y += 0.10f;
+		std::cout << "Object " << g_GameObjNumber << " position: " <<
+			::g_vecGameObjects[g_GameObjNumber]->position.x << " / " <<
+			::g_vecGameObjects[g_GameObjNumber]->position.y << " / " <<
+			::g_vecGameObjects[g_GameObjNumber]->position.z << std::endl;
+		//::g_pLightManager->vecLights[g_LightObjNumber].position.y += 0.10f;
 		break;
 	case GLFW_KEY_DOWN:		// Down arrow
-		//::g_vecGameObjects[g_GameObjNumber]->position.y -= 0.10f;
-		::g_pLightManager->vecLights[g_LightObjNumber].position.y -= 0.10f;
+		::g_vecGameObjects[g_GameObjNumber]->position.y -= 0.10f;
+		std::cout << "Object " << g_GameObjNumber << " position: " <<
+			::g_vecGameObjects[g_GameObjNumber]->position.x << " / " <<
+			::g_vecGameObjects[g_GameObjNumber]->position.y << " / " <<
+			::g_vecGameObjects[g_GameObjNumber]->position.z << std::endl;
+		//::g_pLightManager->vecLights[g_LightObjNumber].position.y -= 0.10f;
 		break;
 	case GLFW_KEY_LEFT:		// Left arrow
-		//::g_vecGameObjects[g_GameObjNumber]->position.x -= 0.10f;
-		::g_pLightManager->vecLights[g_LightObjNumber].position.x -= 0.10f;
+		::g_vecGameObjects[g_GameObjNumber]->position.x -= 0.10f;
+		std::cout << "Object " << g_GameObjNumber << " position: " <<
+			::g_vecGameObjects[g_GameObjNumber]->position.x << " / " <<
+			::g_vecGameObjects[g_GameObjNumber]->position.y << " / " <<
+			::g_vecGameObjects[g_GameObjNumber]->position.z << std::endl;
+		//::g_pLightManager->vecLights[g_LightObjNumber].position.x -= 0.10f;
 		break;
 	case GLFW_KEY_RIGHT:	// Right arrow
-		//::g_vecGameObjects[g_GameObjNumber]->position.x += 0.10f;
-		::g_pLightManager->vecLights[g_LightObjNumber].position.x += 0.10f;
+		::g_vecGameObjects[g_GameObjNumber]->position.x += 0.10f;
+		std::cout << "Object " << g_GameObjNumber << " position: " <<
+			::g_vecGameObjects[g_GameObjNumber]->position.x << " / " <<
+			::g_vecGameObjects[g_GameObjNumber]->position.y << " / " <<
+			::g_vecGameObjects[g_GameObjNumber]->position.z << std::endl;
+		//::g_pLightManager->vecLights[g_LightObjNumber].position.x += 0.10f;
 		break;
 	case GLFW_KEY_LEFT_BRACKET:		// [{ key
-		//::g_vecGameObjects[g_GameObjNumber]->position.z += 0.10f;
-		::g_pLightManager->vecLights[g_LightObjNumber].position.z += 0.10f;
+		::g_vecGameObjects[g_GameObjNumber]->position.z += 0.10f;
+		std::cout << "Object " << g_GameObjNumber << " position: " <<
+			::g_vecGameObjects[g_GameObjNumber]->position.x << " / " <<
+			::g_vecGameObjects[g_GameObjNumber]->position.y << " / " <<
+			::g_vecGameObjects[g_GameObjNumber]->position.z << std::endl;
+		//::g_pLightManager->vecLights[g_LightObjNumber].position.z += 0.10f;
 		break;
 	case GLFW_KEY_RIGHT_BRACKET:		// ]} key
-		//::g_vecGameObjects[g_GameObjNumber]->position.z -= 0.10f;
-		::g_pLightManager->vecLights[g_LightObjNumber].position.z -= 0.10f;
+		::g_vecGameObjects[g_GameObjNumber]->position.z -= 0.10f;
+		std::cout << "Object " << g_GameObjNumber << " position: " <<
+			::g_vecGameObjects[g_GameObjNumber]->position.x << " / " <<
+			::g_vecGameObjects[g_GameObjNumber]->position.y << " / " <<
+			::g_vecGameObjects[g_GameObjNumber]->position.z << std::endl;
+		//::g_pLightManager->vecLights[g_LightObjNumber].position.z -= 0.10f;
 		break;
 	}
 
@@ -236,19 +267,24 @@ static void key_callback( GLFWwindow* window, int key, int scancode, int action,
 	switch ( key )
 	{
 	case GLFW_KEY_1:
-		g_LightObjNumber = 0; 
+		g_LightObjNumber = 0;
+		g_GameObjNumber = 20;
 		break;
 	case GLFW_KEY_2:
 		g_LightObjNumber = 1;
+		g_GameObjNumber = 21;
 		break;
 	case GLFW_KEY_3:
 		g_LightObjNumber = 2;
+		g_GameObjNumber = 22;
 		break;
 	case GLFW_KEY_4:
 		g_LightObjNumber = 3;
+		//g_GameObjNumber = 23;
 		break;
 	case GLFW_KEY_5:
 		g_LightObjNumber = 4;
+		//g_GameObjNumber = 24;
 		break;
 	case GLFW_KEY_6:
 		g_LightObjNumber = 5;
@@ -612,7 +648,7 @@ int main( void )
 		double deltaTime = curTime - lastTimeStep;
 		
 		// Physics Calculation
-		PhysicsStep( deltaTime );
+		PhysicsStep( curTime, deltaTime );
 
 		lastTimeStep = curTime;
 
@@ -717,7 +753,7 @@ void loadLightObjects()
 }
 
 // Update the world 1 "step" in time
-void PhysicsStep( double deltaTime )
+void PhysicsStep( double curTime, double deltaTime )
 {
 	// Distance                          m
 	// Velocity = distance / time		 m/s
@@ -733,7 +769,8 @@ void PhysicsStep( double deltaTime )
 	//	pCurGO->diffuseColour = glm::vec4( 1.0f, 1.0f, 1.0f, 1.0f );
 	//}//for ( int index
 
-	const glm::vec3 GRAVITY = glm::vec3( 0.0f, -2.0f, 0.0f );
+	//const glm::vec3 GRAVITY = glm::vec3( 0.0f, -2.0f, 0.0f );
+	const glm::vec3 GRAVITY = glm::vec3(0.0f, 0.0f, 0.0f);
 
 	// Identical to the 'render' (drawing) loop
 	for ( int index = 0; index != ::g_vecGameObjects.size(); index++ )
@@ -761,7 +798,7 @@ void PhysicsStep( double deltaTime )
 		switch ( pCurGO->typeOfObject )
 		{
 		case eTypeOfObject::SPHERE:
-			//	// Comare this to EVERY OTHER object in the scene
+			//	// Compare this to EVERY OTHER object in the scene
 			for ( int indexEO = 0; indexEO != ::g_vecGameObjects.size(); indexEO++ )
 			{
 				// Don't test for myself
@@ -774,34 +811,76 @@ void PhysicsStep( double deltaTime )
 				{
 				case eTypeOfObject::SPHERE:
 					//
-					if ( PenetrationTestSphereSphere( pCurGO, pOtherObject ) )
+					if ( PenetrationTestSphereSphere( pCurGO, pOtherObject, curTime, deltaTime ) )
 					{
-						////std::cout << "Collision!" << std::endl;
-						//pCurGO->diffuseColour = glm::vec4( 1.0f, 0.0f, 0.0f, 1.0f );
-						//pOtherObject->diffuseColour = glm::vec4( 1.0f, 0.0f, 0.0f, 1.0f );
+						//pCurGO->diffuseColour = glm::vec4( generateRandomNumber(0.0f, 1.0f),
+						//								   generateRandomNumber(0.0f, 1.0f),
+						//								   generateRandomNumber(0.0f, 1.0f),
+						//								   1.0f );
+
+						//pOtherObject->diffuseColour = glm::vec4( generateRandomNumber(0.0f, 1.0f),
+						//										 generateRandomNumber(0.0f, 1.0f),
+						//										 generateRandomNumber(0.0f, 1.0f),
+						//										 1.0f);
+
+						bounceSpheres( pCurGO, pOtherObject );
 					}
 
 					break;
+
+				//case eTypeOfObject::PLANE:
+				////    CalcSpherePlaneColision( pCurGO, pGO_to_Compare );
+				//	break;
 				}
 			}
 
-			//		switch ( pGO_to_Compare->typeOfObject )
-			//		{
-			//		case eTypeOfObject::SPHERE:
-			//			CalcSphereSphereColision( pCurGO, pGO_to_Compare );
-			//			break;
-			//		case eTypeOfObject::PLANE:
-			//			CalcSpherePlaneColision( pCurGO, pGO_to_Compare );
-			//			break;
-			//		// More if I'd like that.
+			//switch ( pGO_to_Compare->typeOfObject )
+			//{
+			//case eTypeOfObject::SPHERE:
+			//	CalcSphereSphereColision( pCurGO, pGO_to_Compare );
+			//	break;
+			
+			//// More if I'd like that.
 			//
-			//		}
-			//	}
+			//}		
+
+			// HACK to stop the balls, simulate the frictional force
+			if (pCurGO->vel.x < 0.01f && pCurGO->vel.x > -0.01f)
+			{
+				pCurGO->vel.x = 0.0f;
+			}
+
+			if (pCurGO->vel.x < 0.0f)
+			{
+				pCurGO->vel.x += g_FRICTION_FORCE;
+			}
+			else if (pCurGO->vel.x > 0.0f)
+			{
+				pCurGO->vel.x -= g_FRICTION_FORCE;
+			}
+
+			if (pCurGO->vel.z < 0.01f && pCurGO->vel.z > -0.01f)
+			{
+				pCurGO->vel.z = 0.0f;
+			}
+
+			if (pCurGO->vel.z < 0.0f)
+			{
+				pCurGO->vel.z += g_FRICTION_FORCE;
+			}
+			else if (pCurGO->vel.z > 0.0f)
+			{
+				pCurGO->vel.z -= g_FRICTION_FORCE;
+			}
+
+			
 
 			// HACK
 			const float SURFACEOFGROUND = 0.0f;
-			const float RIGHTSIDEWALL = 5.0f;
-			const float LEFTSIDEWALL = -5.0f;
+			const float RIGHTSIDEWALL   = 18.0f;
+			const float LEFTSIDEWALL    = -18.0f;
+			const float BACKSIDEWALL    = -9.0f;
+			const float FRONTSIDEWALL   = 9.0f;
 			 
 			//Sphere-Plane detection
 
@@ -812,18 +891,34 @@ void PhysicsStep( double deltaTime )
 				pCurGO->vel.y = +( fabs( pCurGO->vel.y ) );
 			}
 
-			//if ( ( pCurGO->position.x + pCurGO->radius ) >= RIGHTSIDEWALL )
-			//{	// Object too far to the right
-			//	// Object has penetrated the right plane
-			//	//pCurGO->diffuseColour = glm::vec4( 0.0f, 1.0f, 0.0f, 1.0f );
-			//	pCurGO->vel.x = -( fabs( pCurGO->vel.x ) );
-			//}
+			if ( ( pCurGO->position.x + pCurGO->radius ) >= RIGHTSIDEWALL )
+			{	// Object too far to the right
+				// Object has penetrated the right plane
+				//pCurGO->diffuseColour = glm::vec4( 0.0f, 1.0f, 0.0f, 1.0f );
+				pCurGO->vel.x = -( fabs( pCurGO->vel.x ) );
+			}
 			if ( ( pCurGO->position.x - pCurGO->radius ) <= LEFTSIDEWALL )
 			{	// Object too far to the left
 				// Object has penetrated the left plane
 				//pCurGO->diffuseColour = glm::vec4( 0.0f, 1.0f, 0.0f, 1.0f );
 				pCurGO->vel.x = +( fabs( pCurGO->vel.x ) );
 			}
+
+			if ((pCurGO->position.z - pCurGO->radius) <= BACKSIDEWALL)
+			{	// Object too far to the left
+				// Object has penetrated the left plane
+				//pCurGO->diffuseColour = glm::vec4( 0.0f, 1.0f, 0.0f, 1.0f );
+				pCurGO->vel.z = +(fabs(pCurGO->vel.z));
+			}
+
+			if ((pCurGO->position.z + pCurGO->radius) >= FRONTSIDEWALL)
+			{	// Object too far to the right
+				// Object has penetrated the right plane
+				//pCurGO->diffuseColour = glm::vec4( 0.0f, 1.0f, 0.0f, 1.0f );
+				pCurGO->vel.z = -(fabs(pCurGO->vel.z));
+			}
+
+
 			break;
 		};
 

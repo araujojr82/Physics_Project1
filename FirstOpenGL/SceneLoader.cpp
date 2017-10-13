@@ -12,6 +12,8 @@ static const std::string g_OBJECTSFILE = "objects.txt";
 extern std::vector< cGameObject* >  g_vecGameObjects;
 extern cGameObject* g_pTheDebugSphere;
 
+extern float generateRandomNumber(float min, float max);
+
 struct sGOparameters		// for the Game Objects' input file
 {
 	std::string meshname;
@@ -20,6 +22,7 @@ struct sGOparameters		// for the Game Objects' input file
 	float radius;
 	std::string isUpdated;
 	float red, green, blue, alpha;
+	float mass;
 };
 
 sGOparameters parseObjLine(std::ifstream &source);
@@ -76,6 +79,9 @@ bool LoadModelsIntoScene(std::string &error)
 			pTempGO->bIsUpdatedInPhysics = false;
 		}
 
+		// ADD mass
+		pTempGO->mass = allObjects[index].mass;
+		pTempGO->inverseMass -= allObjects[index].mass;
 
 		// ADD velocity and acceleration
 		if (!pTempGO->bIsLight)
@@ -95,6 +101,13 @@ bool LoadModelsIntoScene(std::string &error)
 		{
 			pTempGO->typeOfObject = eTypeOfObject::SPHERE;
 			pTempGO->radius = allObjects[index].radius;
+
+			if( index != 2 ){
+				/*pTempGO->vel.x = generateRandomNumber( 2.0f, 4.0f );
+				pTempGO->vel.z = generateRandomNumber( 2.0f, 4.0f );
+				pTempGO->vel.y = 0.0f;*/
+			}
+			
 		}
 		else if (allObjects[index].type == "PLANE") {
 			pTempGO->typeOfObject = eTypeOfObject::PLANE;
@@ -115,6 +128,18 @@ bool LoadModelsIntoScene(std::string &error)
 	//	//::g_vecGameObjects.push_back( pTempGO );		// Fastest way to add
 	//}// ENDOF: Add the debug sphere
 
+	//cGameObject* pTempGO = new cGameObject();
+	//pTempGO->position = glm::vec3(0.0f, 0.26f, 0.0f);
+	//pTempGO->scale = 1.0f;
+	//pTempGO->diffuseColour = glm::vec4(1.0f, 1.0f, 1.0f, 1.0f);
+	//pTempGO->meshName = "ball";
+	//pTempGO->typeOfObject = eTypeOfObject::SPHERE;
+	//pTempGO->radius = 0.26f;
+	//pTempGO->bIsUpdatedInPhysics = false;
+	//::g_vecGameObjects.push_back(pTempGO);
+	
+	
+
 	return bAnyErrors;
 }
 
@@ -134,7 +159,8 @@ sGOparameters parseObjLine(std::ifstream &source) {
 		>> sGOpar.red
 		>> sGOpar.green
 		>> sGOpar.blue
-		>> sGOpar.alpha;
+		>> sGOpar.alpha
+		>> sGOpar.mass;
 
 	return sGOpar;
 }

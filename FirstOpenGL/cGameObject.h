@@ -21,6 +21,7 @@ public:
 	cGameObject();		// constructor
 	~cGameObject();		// destructor
 	glm::vec3 position;
+	glm::vec3 prevPosition;
 	glm::vec3 orientation;
 	glm::vec3 orientation2;		// HACK (will elimiate this with)
 	glm::vec3 rotation;
@@ -31,8 +32,8 @@ public:
 	glm::vec3 vel;			// Velocity
 	glm::vec3 accel;		// Acceleration
 	bool bIsUpdatedInPhysics;		// 
-	//	float mass;		INFINITY				// 
-	//	float inverseMass;	// = 0.0f	// 
+	float mass;		// INFINITY				// 
+	float inverseMass;	// = 0.0f	// 
 	// Refers to the enum above
 	eTypeOfObject typeOfObject;		// (really an int)
 	float radius;
