@@ -96,7 +96,7 @@ float generateRandomNumber( float min, float max );
 
 void DrawObject( cGameObject* pTheGO );
 void DrawDebugSphere( glm::vec3 location, glm::vec4 colour, float scale );
-
+void DrawClosestPointsOnTable( glm::vec3 thePoint );
 
 
 static void error_callback( int error, const char* description )
@@ -128,7 +128,7 @@ static void key_callback( GLFWwindow* window, int key, int scancode, int action,
 	// Change "target" selected game object
 	if( key == GLFW_KEY_TAB && action == GLFW_PRESS )
 	{
-		if( g_GameObjNumber < ( ::g_vecGameObjects.size() - 1 ) ) {
+		if( g_GameObjNumber << ( ::g_vecGameObjects.size() - 1 ) ) {
 			g_GameObjNumber++;
 		}
 		else
@@ -390,9 +390,8 @@ int main( void )
 	::g_pLightManager->vecLights[0].position = glm::vec3(0.0f, 45.0f, 0.0f);
 	//::g_pLightManager->vecLights[0].diffuse = glm::vec3( 1.0f, 1.0f, 1.0f );
 	//::g_pLightManager->vecLights[0].ambient = glm::vec3( 1.0f, 1.0f, 1.0f );
-	::g_pLightManager->vecLights[0].attenuation.y = 0.0222676f; // 0.06f;		// Change the linear attenuation
-	::g_pLightManager->vecLights[0].attenuation.z = 0.0;
-
+	::g_pLightManager->vecLights[0].attenuation.y = 0.06f;		// Change the linear attenuation
+	
 	//set the diffuse light to white
 	::g_pLightManager->vecLights[0].diffuse = glm::vec3(1.0f, 1.0f, 1.0f);
 
@@ -435,7 +434,8 @@ int main( void )
 		float ratio;
 		int width, height;
 		//glm::mat4x4 m, p, mvp;			//  mat4x4 m, p, mvp;
-		glm::mat4x4 p, mvp;			//  mat4x4 m, p, mvp;
+		//glm::mat4x4 p, mvp;			//  mat4x4 m, p, mvp;
+		glm::mat4x4 p;			//  mat4x4 m, p, mvp;
 
 		glfwGetFramebufferSize( window, &width, &height );
 		ratio = width / ( float )height;
@@ -645,8 +645,25 @@ void PhysicsStep( double deltaTime )
 	// velocity = time * acceleration
 
 	// Use the white ball location 
-	glm::vec3 thePointToTest = ::g_vecGameObjects[2]->position;
-	DrawClosestPointsOnTable( thePointToTest );
+	//glm::vec3 thePointToTest = ::g_vecGameObjects[2]->position;
+	//DrawClosestPointsOnTable( thePointToTest );
+
+	{
+		glm::vec3 thePointToTest = ::g_vecGameObjects[2]->position;
+
+		int numberOfTriangles = ::g_MeshPoolTable.vecPhysTris.size();
+
+		for( int triIndex = 0; triIndex != numberOfTriangles; triIndex++ )
+		{
+			// Get reference object for current triangle
+			// (so the line below isn't huge long...)
+			cPhysTriangle& curTriangle = ::g_MeshPoolTable.vecPhysTris[triIndex];
+
+			glm::vec3 theClosestPoint = curTriangle.ClosestPtPointTriangle( thePointToTest );
+
+			DrawDebugSphere( theClosestPoint, glm::vec4( 1, 1, 1, 1 ), 0.2f );
+		}
+	}
 
 
 	//const glm::vec3 GRAVITY = glm::vec3( 0.0f, -2.0f, 0.0f );

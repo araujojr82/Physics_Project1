@@ -62,7 +62,6 @@ bool LoadModelsIntoScene(std::string &error)
 		// HACK add physics mesh hard coded to the sides of the table
 		if( pTempGO->meshName == "poolsides" )
 		{
-			pTempGO->meshName = "physics_poolsides";	//FOR NOW SO WE CAN SEE THE PHYSICS MODEL
 			pTempGO->physicsMeshName = "physics_poolsides";
 		}
 		
@@ -119,7 +118,7 @@ bool LoadModelsIntoScene(std::string &error)
 		}
 		else if (allObjects[index].type == "PLANE") {
 			pTempGO->typeOfObject = eTypeOfObject::PLANE;
-			pTempGO->bIsWireFrame = true;
+			//pTempGO->bIsWireFrame = true;
 		}
 
 		::g_vecGameObjects.push_back(pTempGO);
@@ -129,7 +128,7 @@ bool LoadModelsIntoScene(std::string &error)
 		::g_pTheDebugSphere = new cGameObject();
 		::g_pTheDebugSphere->scale = 1.0f;
 		::g_pTheDebugSphere->diffuseColour = glm::vec4(1.0f, 1.0f, 1.0f, 1.0f);
-		::g_pTheDebugSphere->meshName = "SphereRadius1";
+		::g_pTheDebugSphere->meshName = "sphere";
 		::g_pTheDebugSphere->typeOfObject = eTypeOfObject::SPHERE;
 		::g_pTheDebugSphere->radius = 1.0f;
 		::g_pTheDebugSphere->bIsUpdatedInPhysics = false;

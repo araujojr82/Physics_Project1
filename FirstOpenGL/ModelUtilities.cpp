@@ -57,7 +57,7 @@ bool LoadPlyFileIntoMesh( std::string filename, cMesh &theMesh )
 	{
 		//end_header
 		//-0.0312216 0.126304 0.00514924 0.850855 0.5 		
-		float x, y, z, confidence, intensity;
+		float x, y, z; // , confidence, intensity;
 
 		plyFile >> x;
 		plyFile >> y;
@@ -119,7 +119,7 @@ bool LoadPlyFileIntoMeshWithNormals(std::string filename, cMesh &theMesh)
 	// Read vertices
 	for (int index = 0; index < theMesh.numberOfVertices; index++)
 	{
-		float x, y, z, nx, ny, nz, confidence, intensity;
+		float x, y, z, nx, ny, nz; // , confidence, intensity;
 
 		plyFile >> x;
 		plyFile >> y;
@@ -178,7 +178,7 @@ bool Load3DModelsIntoMeshManager(int shaderID, cVAOMeshManager* pVAOManager, std
 
 	for (int index = 0; index != allMeshes.size(); index++)
 	{	
-		if( allMeshes[index].meshname != "poolsides" )
+		if( allMeshes[index].meshname != "physics_poolsides" )
 		{
 			cMesh testMesh;
 			testMesh.name = allMeshes[index].meshname;
