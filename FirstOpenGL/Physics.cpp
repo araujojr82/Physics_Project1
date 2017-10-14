@@ -24,9 +24,6 @@ bool PenetrationTestSphereSphere( cGameObject* pA, cGameObject* pB, double timeO
 
 void bounceSpheres( cGameObject* pA, cGameObject* pB )
 {
-	glm::vec3 nv1; // new velocity for sphere 1
-	glm::vec3 nv2; // new velocity for sphere 2
-
 	float deltaMass, deltaVelX_2, a,
 		deltaPosX, deltaPosZ, 
 		deltaVelX, deltaVelZ, 
@@ -44,7 +41,6 @@ void bounceSpheres( cGameObject* pA, cGameObject* pB )
 	// Check division by zero
 	if( deltaPosX == 0.0f )     a = deltaPosZ;
 	else						a = deltaPosZ / deltaPosX;
-
 
 	deltaVelX_2 = -2 * ( deltaVelX + a * deltaVelZ ) / ( ( 1 + a * a ) * ( 1 + deltaMass ) );
 	

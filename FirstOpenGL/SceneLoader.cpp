@@ -15,7 +15,7 @@ extern cGameObject* g_pTheDebugSphere;
 extern float generateRandomNumber(float min, float max);
 
 struct sGOparameters		// for the Game Objects' input file
-{
+{	
 	std::string meshname;
 	float x, y, z, scale;
 	std::string type;
@@ -23,6 +23,7 @@ struct sGOparameters		// for the Game Objects' input file
 	std::string isUpdated;
 	float red, green, blue, alpha;
 	float mass;
+	std::string description;
 };
 
 sGOparameters parseObjLine(std::ifstream &source);
@@ -138,6 +139,7 @@ bool LoadModelsIntoScene(std::string &error)
 	//pTempGO->bIsUpdatedInPhysics = false;
 	//::g_vecGameObjects.push_back(pTempGO);
 
+	// Add the cue stick, independent of the loaded objects file.
 	cGameObject* pTempGO = new cGameObject();
 	pTempGO->scale = 1.0f;
 	pTempGO->position = glm::vec3( 0.0f, 0.26f, 0.0f );
@@ -146,8 +148,6 @@ bool LoadModelsIntoScene(std::string &error)
 	pTempGO->typeOfObject = eTypeOfObject::CUE;
 	pTempGO->bIsUpdatedInPhysics = false;
 	::g_vecGameObjects.push_back(pTempGO);
-	
-	
 
 	return bAnyErrors;
 }
@@ -169,7 +169,8 @@ sGOparameters parseObjLine(std::ifstream &source) {
 		>> sGOpar.green
 		>> sGOpar.blue
 		>> sGOpar.alpha
-		>> sGOpar.mass;
+		>> sGOpar.mass
+		>> sGOpar.description;
 
 	return sGOpar;
 }

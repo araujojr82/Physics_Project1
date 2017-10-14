@@ -19,9 +19,4 @@ bool PenetrationTestSphereSphere( cGameObject* pA, cGameObject* pB, double colli
 
 void bounceSpheres( cGameObject* pA, cGameObject* pB );
 
-glm::vec3 scale( const glm::vec3& v, glm::vec3 a );
-
-glm::vec3 projectUonV( const glm::vec3& u, const glm::vec3& v );
-
-
 #endif
