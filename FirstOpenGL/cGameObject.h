@@ -47,6 +47,7 @@ public:
 	glm::vec4 diffuseColour;	//  The actual color when lights hit it
 
 	std::string meshName;		// mesh I'd  like to draw
+	std::string physicsMeshName;	// mesh to be used in collision
 };
 
 #endif

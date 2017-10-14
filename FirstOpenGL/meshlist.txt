@@ -1,5 +1,6 @@
 pooltable   pooltableXZ_xyz_n.ply
 poolsides   poolsides_xyz_n.ply
+physics_poolsides  poolsides_physics.ply
 sphere      Sphereply_xyz_n.ply
 lightsphere lightsphereply_xyz_n.ply
 ball        ball2_xyz_n.ply

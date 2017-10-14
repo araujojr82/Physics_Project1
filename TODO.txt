@@ -12,3 +12,5 @@ DONE 5.3 Spacebar to "shoot"
 7. Add arrow to "display" the angle and velocity (waiting for Feeney's code)
 DONE 8. Add cue stick (attached to white ball)
  8.1 Cue stick position is the inverse of the angle/velocity arrow)
+9. Change the table model, to add holes in the sides
+10. Add Multiple cameras options (1 centered at the white ball)

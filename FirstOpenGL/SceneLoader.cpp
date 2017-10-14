@@ -59,6 +59,13 @@ bool LoadModelsIntoScene(std::string &error)
 
 		pTempGO->meshName = allObjects[index].meshname; // Set the name of the mesh
 
+		// HACK add physics mesh hard coded to the sides of the table
+		if( pTempGO->meshName == "poolsides" )
+		{
+			pTempGO->meshName = "physics_poolsides";	//FOR NOW SO WE CAN SEE THE PHYSICS MODEL
+			pTempGO->physicsMeshName = "physics_poolsides";
+		}
+		
 		// position and scale from the file
 		pTempGO->position.x = allObjects[index].x;
 		pTempGO->position.y = allObjects[index].y;
