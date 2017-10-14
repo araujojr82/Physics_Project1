@@ -4,6 +4,8 @@
 #include <sstream>
 #include <vector>
 
+extern cMesh g_MeshPoolTable;
+
 static const std::string g_MESHLISTFILE = "meshlist.txt";
 
 void ReadFileToToken( std::ifstream &file, std::string token )
@@ -175,19 +177,39 @@ bool Load3DModelsIntoMeshManager(int shaderID, cVAOMeshManager* pVAOManager, std
 	}
 
 	for (int index = 0; index != allMeshes.size(); index++)
-	{
-		cMesh testMesh;
-		testMesh.name = allMeshes[index].meshname;
-		if (!LoadPlyFileIntoMeshWithNormals(allMeshes[index].meshFilename, testMesh))
+	{	
+		if( allMeshes[index].meshname != "poolsides" )
 		{
-			ssError << "Didn't load model >" << testMesh.name << "<" << std::endl;
-			bAnyErrors = true;
+			cMesh testMesh;
+			testMesh.name = allMeshes[index].meshname;
+			if( !LoadPlyFileIntoMeshWithNormals( allMeshes[index].meshFilename, testMesh ) )
+			{
+				ssError << "Didn't load model >" << testMesh.name << "<" << std::endl;
+				bAnyErrors = true;
 
+			}
+			if( !pVAOManager->loadMeshIntoVAO( testMesh, shaderID ) )
+			{
+				ssError << "Could not load mesh >" << testMesh.name << "< into VAO" << std::endl;
+				bAnyErrors = true;
+			}
 		}
-		if (!pVAOManager->loadMeshIntoVAO(testMesh, shaderID))
-		{
-			ssError << "Could not load mesh >" << testMesh.name << "< into VAO" << std::endl;
-			bAnyErrors = true;
+		else
+		{ // This is the pooltable mesh for physics
+			::g_MeshPoolTable.name = allMeshes[index].meshname;
+			if( !LoadPlyFileIntoMeshWithNormals( allMeshes[index].meshFilename, g_MeshPoolTable ) )
+			{
+				ssError << "Didn't load model >" << g_MeshPoolTable.name << "<" << std::endl;
+				bAnyErrors = true;
+			}
+			if( !pVAOManager->loadMeshIntoVAO( g_MeshPoolTable, shaderID ) )
+			{
+				ssError << "Could not load mesh >" << g_MeshPoolTable.name << "< into VAO" << std::endl;
+				bAnyErrors = true;
+			}
+
+			// For physics, generate the triangles we need for physics
+			::g_MeshPoolTable.GeneratePhysicsTriangles();
 		}
 	}
 

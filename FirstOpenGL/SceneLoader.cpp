@@ -119,22 +119,23 @@ bool LoadModelsIntoScene(std::string &error)
 		}
 		else if (allObjects[index].type == "PLANE") {
 			pTempGO->typeOfObject = eTypeOfObject::PLANE;
+			pTempGO->bIsWireFrame = true;
 		}
 
 		::g_vecGameObjects.push_back(pTempGO);
 	}
-	//// Add the debug sphere
-	//{// STARTOF: Add the debug sphere
-	//	::g_pTheDebugSphere = new cGameObject();
-	//	::g_pTheDebugSphere->scale = 1.0f;
-	//	::g_pTheDebugSphere->diffuseColour = glm::vec4(1.0f, 1.0f, 1.0f, 1.0f);
-	//	::g_pTheDebugSphere->meshName = "SphereRadius1";
-	//	::g_pTheDebugSphere->typeOfObject = eTypeOfObject::SPHERE;
-	//	::g_pTheDebugSphere->radius = 1.0f;
-	//	::g_pTheDebugSphere->bIsUpdatedInPhysics = false;
-	//	// NOTE: I'm NOT adding it to the vector of objects
-	//	//::g_vecGameObjects.push_back( pTempGO );		// Fastest way to add
-	//}// ENDOF: Add the debug sphere
+	// Add the debug sphere
+	{// STARTOF: Add the debug sphere
+		::g_pTheDebugSphere = new cGameObject();
+		::g_pTheDebugSphere->scale = 1.0f;
+		::g_pTheDebugSphere->diffuseColour = glm::vec4(1.0f, 1.0f, 1.0f, 1.0f);
+		::g_pTheDebugSphere->meshName = "SphereRadius1";
+		::g_pTheDebugSphere->typeOfObject = eTypeOfObject::SPHERE;
+		::g_pTheDebugSphere->radius = 1.0f;
+		::g_pTheDebugSphere->bIsUpdatedInPhysics = false;
+		// NOTE: I'm NOT adding it to the vector of objects
+		//::g_vecGameObjects.push_back( pTempGO );		// Fastest way to add
+	}// ENDOF: Add the debug sphere
 
 	//cGameObject* pTempGO = new cGameObject();
 	//pTempGO->position = glm::vec3(0.0f, 0.26f, 0.0f);

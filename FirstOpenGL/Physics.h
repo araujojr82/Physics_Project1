@@ -15,7 +15,7 @@ class cGameObject;
 // Sphere-Mesh
 
 // Our objects are vectors of pointers, so we might as well pass pointers
-bool PenetrationTestSphereSphere( cGameObject* pA, cGameObject* pB, double collisionTime, double deltaTime );
+bool PenetrationTestSphereSphere( cGameObject* pA, cGameObject* pB, double deltaTime );
 
 void bounceSpheres( cGameObject* pA, cGameObject* pB );
 

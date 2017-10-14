@@ -6,13 +6,12 @@
 
 //#define MAX_VERTEX_ARRAY_SIZE 2048
 //#define MAX_INDEX_ARRAY_SIZE 2048
-//static const int MAX_VERTEX_ARRAY_SIZE = 4096;
-//static const int MAX_INDEX_ARRAY_SIZE = 4096;
-static const int MAX_VERTEX_ARRAY_SIZE = 8192;
-static const int MAX_INDEX_ARRAY_SIZE = 8192;
+static const int MAX_VERTEX_ARRAY_SIZE = 4096;
+static const int MAX_INDEX_ARRAY_SIZE = 4096;
 
 #include <string>
 #include <glm/vec3.hpp>
+#include <vector>
 
 class cMesh
 {
@@ -31,6 +30,10 @@ public:
 //	cTriangle triangles[MAX_INDEX_ARRAY_SIZE];	// Stack
 	cTriangle* pTriangles;						// Heap
 	int numberOfTriangles;
+
+	// Used for the physics calculations
+	std::vector< cPhysTriangle > vecPhysTris;
+	void GeneratePhysicsTriangles( void );
 
 	// Takes an indexed model and makes just a vertex array model
 	// WARNING: Will OVERWRITE the vertex array 

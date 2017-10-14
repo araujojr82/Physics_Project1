@@ -15,6 +15,8 @@ uniform vec4 materialSpecular;  // rgb = colour of HIGHLIGHT only
 								// w = shininess of the 
 uniform vec3 eyePosition;	// Camera position
 
+uniform bool bIsDebugWireFrameObject;
+
 
 /*****************************************************/
 struct sLightDesc {
@@ -42,6 +44,16 @@ vec3 calcLightColour( in vec3 vecNormal,
 
 void main()
 {	
+	// Is this a 'debug' wireframe object
+	// i.e. no lighting, just use diffuse
+	if ( bIsDebugWireFrameObject )
+	{
+		gl_FragColor.rgb = materialDiffuse.rgb;
+		gl_FragColor.a = 1.0f;
+		// Immediate return
+		return;
+	}
+	
 	//gl_FragColor = (diffuseColour * 0.000001f);	
 	//gl_FragColor += vec4(vertNormal,1.0f);  
 	
@@ -50,7 +62,7 @@ void main()
 
 	// Set to black...
 	gl_FragColor.rgb = vec3(0.0f, 0.0f, 0.0f);
-	for ( int index = 0; index < NUMBEROFLIGHTS; index++ )
+	for ( int index = 0; index < 1; index++ )
 	{
 		gl_FragColor.rgb += calcLightColour( vertNormal, vecWorldPosition, index );
 	}

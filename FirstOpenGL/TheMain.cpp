@@ -13,12 +13,10 @@
 // Add the file stuff library (file stream>
 #include <fstream>
 #include <sstream>						// "String stream"
-#include <istream>
 #include <string>
-#include <vector>						// smart array, "array" in most languages
-#include <random>
-#include <chrono>
+//#include <istream>
 
+#include <vector>						// smart array, "array" in most languages
 #include "Utilities.h"
 #include "ModelUtilities.h"
 #include "cMesh.h"
@@ -30,23 +28,28 @@
 
 #include "cLightManager.h"
 
+#include <random>
+#include <chrono>
+
 // Euclides: Control selected object for movement
 int g_GameObjNumber = 0;				// game object vector position number 
 int g_LightObjNumber = 0;				// light object vector position
 
-cGameObject* g_pTheCueGO;
-bool g_isThereMovement = false;
 
+cMesh g_MeshPoolTable;
 
-glm::vec3 CAMERASPEED = glm::vec3( 0.0f, 0.0f, 0.0f );
+//glm::vec3 CAMERASPEED = glm::vec3( 0.0f, 0.0f, 0.0f );
 static const int g_NUMBER_OF_LIGHTS = 5;
 static const float g_FRICTION_FORCE = 0.01f;
 
 bool bIsWireframe = false;
+bool g_isThereMovement = false;
 
 // Remember to #include <vector>...
 std::vector< cGameObject* > g_vecGameObjects;
 
+cGameObject* g_pTheDebugSphere;
+cGameObject* g_pTheCueGO;
 
 glm::vec3 g_cameraXYZ = glm::vec3( 0.0f, 40.0f, 0.1f ); // Default top pool view
 //glm::vec3 g_cameraXYZ = glm::vec3(0.0f, 0.2f, 30.0f); // Side "horizontal"  view
@@ -58,6 +61,19 @@ cVAOMeshManager*	g_pVAOManager = 0;		// or NULL or nullptr
 
 cShaderManager*		g_pShaderManager;		// Heap, new (and delete)
 cLightManager*		g_pLightManager;
+
+// Other uniforms:
+GLint uniLoc_materialDiffuse = -1;
+GLint uniLoc_materialAmbient = -1;
+GLint uniLoc_ambientToDiffuseRatio = -1; 	// Maybe	// 0.2 or 0.3
+GLint uniLoc_materialSpecular = -1;  // rgb = colour of HIGHLIGHT only
+									 // w = shininess of the 
+GLint uniLoc_bIsDebugWireFrameObject = -1;
+
+GLint uniLoc_eyePosition = -1;	// Camera position
+GLint uniLoc_mModel = -1;
+GLint uniLoc_mView = -1;
+GLint uniLoc_mProjection = -1;
 
 struct sWindowConfig
 {
@@ -71,11 +87,17 @@ public:
 void loadConfigFile( std::string fileName, sWindowConfig& wConfig );
 void loadLightObjects();
 
-void PhysicsStep( double curTime, double deltaTime );
+void PhysicsStep( double deltaTime );
 
 bool LoadModelsIntoScene(std::string &error);
 bool Load3DModelsIntoMeshManager(int shaderID, cVAOMeshManager* pVAOManager, std::string &error);
 float generateRandomNumber( float min, float max );
+
+
+void DrawObject( cGameObject* pTheGO );
+void DrawDebugSphere( glm::vec3 location, glm::vec4 colour, float scale );
+
+
 
 static void error_callback( int error, const char* description )
 {
@@ -227,36 +249,7 @@ static void key_callback( GLFWwindow* window, int key, int scancode, int action,
 		g_cameraXYZ.y += CAMERAMOVEMENT;
 		break;
 	}
-
-	// Probably wont need this anymore
-	//// Change camera Acceleration
-	//switch( key )
-	//{
-	//case GLFW_KEY_J:		// Left
-	//	CAMERASPEED.x -= 0.00001f;
-	//	break;
-	//case GLFW_KEY_L:		// Right
-	//	CAMERASPEED.x += 0.00001f;
-	//	break;
-	//case GLFW_KEY_I:		// Forward (along z)
-	//	CAMERASPEED.z += 0.00001f;
-	//	break;
-	//case GLFW_KEY_K:		// Backwards (along z)
-	//	CAMERASPEED.z -= 0.00001f;
-	//	break;
-	//case GLFW_KEY_U:		// "Down" (along y axis)
-	//	CAMERASPEED.y -= 0.00001f;
-	//	break;
-	//case GLFW_KEY_O:		// "Up" (along y axis)
-	//	CAMERASPEED.y += 0.00001f;
-	//	break;
-	//}
-	//// Stop Camera
-	//if( key == GLFW_KEY_P && action == GLFW_PRESS )
-	//{
-	//	CAMERASPEED = glm::vec3( 0.0f, 0.0f, 0.0f );
-	//}
-
+	
 	// Change Selected Light
 	switch ( key )
 	{
@@ -275,18 +268,6 @@ static void key_callback( GLFWwindow* window, int key, int scancode, int action,
 	case GLFW_KEY_5:
 		g_LightObjNumber = 4;
 		break;
-	//case GLFW_KEY_6:
-	//	g_LightObjNumber = 5;
-	//	break;
-	//case GLFW_KEY_7:
-	//	g_LightObjNumber = 6;
-	//	break;
-	//case GLFW_KEY_8:
-	//	g_LightObjNumber = 7;
-	//	break;
-	//case GLFW_KEY_9:
-	//	g_LightObjNumber = 8;
-	//	break;
 	}
 
 	return;
@@ -299,16 +280,16 @@ int main( void )
 	GLint mvp_location; //vpos_location, vcol_location;
 	glfwSetErrorCallback( error_callback );
 
-	// Other uniforms:
-	GLint uniLoc_materialDiffuse = -1;
-	GLint uniLoc_materialAmbient = -1;
-	GLint uniLoc_ambientToDiffuseRatio = -1; 	// Maybe	// 0.2 or 0.3
-	GLint uniLoc_materialSpecular = -1;  // rgb = colour of HIGHLIGHT only
-										 // w = shininess of the 
-	GLint uniLoc_eyePosition = -1;	// Camera position
-	GLint uniLoc_mModel = -1;
-	GLint uniLoc_mView = -1;
-	GLint uniLoc_mProjection = -1;
+	//// Other uniforms:
+	//GLint uniLoc_materialDiffuse = -1;
+	//GLint uniLoc_materialAmbient = -1;
+	//GLint uniLoc_ambientToDiffuseRatio = -1; 	// Maybe	// 0.2 or 0.3
+	//GLint uniLoc_materialSpecular = -1;  // rgb = colour of HIGHLIGHT only
+	//									 // w = shininess of the 
+	//GLint uniLoc_eyePosition = -1;	// Camera position
+	//GLint uniLoc_mModel = -1;
+	//GLint uniLoc_mView = -1;
+	//GLint uniLoc_mProjection = -1;
 
 	if( !glfwInit() )
 		exit( EXIT_FAILURE );
@@ -324,6 +305,7 @@ int main( void )
 		wConfig.title.c_str(),
 		NULL, // glfwGetPrimaryMonitor(), //
 		NULL );
+	
 	if( !window )
 	{
 		glfwTerminate();
@@ -369,13 +351,13 @@ int main( void )
 	GLint sexyShaderID = ::g_pShaderManager->getIDFromFriendlyName("mySexyShader");	
 
 	std::string error;
-	if (!Load3DModelsIntoMeshManager(sexyShaderID, ::g_pVAOManager, error))
+	if (Load3DModelsIntoMeshManager(sexyShaderID, ::g_pVAOManager, error))
 	{
 		std::cout << "Not all meshes were loaded..." << std::endl;
 		std::cout << error << std::endl;
 	}
 
-	if (!LoadModelsIntoScene(error))
+	if (LoadModelsIntoScene(error))
 	{
 		std::cout << "Not all objects were loaded..." << std::endl;
 		std::cout << error << std::endl;
@@ -389,7 +371,11 @@ int main( void )
 	uniLoc_materialAmbient = glGetUniformLocation( currentProgID, "materialAmbient" );
 	uniLoc_ambientToDiffuseRatio = glGetUniformLocation( currentProgID, "ambientToDiffuseRatio" );
 	uniLoc_materialSpecular = glGetUniformLocation( currentProgID, "materialSpecular" );
+	
+	uniLoc_bIsDebugWireFrameObject = glGetUniformLocation( currentProgID, "bIsDebugWireFrameObject" );
+
 	uniLoc_eyePosition = glGetUniformLocation( currentProgID, "eyePosition" );
+
 
 	uniLoc_mModel = glGetUniformLocation( currentProgID, "mModel" );
 	uniLoc_mView = glGetUniformLocation( currentProgID, "mView" );
@@ -404,7 +390,9 @@ int main( void )
 	::g_pLightManager->vecLights[0].position = glm::vec3(0.0f, 45.0f, 0.0f);
 	//::g_pLightManager->vecLights[0].diffuse = glm::vec3( 1.0f, 1.0f, 1.0f );
 	//::g_pLightManager->vecLights[0].ambient = glm::vec3( 1.0f, 1.0f, 1.0f );
-	::g_pLightManager->vecLights[0].attenuation.y = 0.06f;		// Change the linear attenuation
+	::g_pLightManager->vecLights[0].attenuation.y = 0.0222676f; // 0.06f;		// Change the linear attenuation
+	::g_pLightManager->vecLights[0].attenuation.z = 0.0;
+
 	//set the diffuse light to white
 	::g_pLightManager->vecLights[0].diffuse = glm::vec3(1.0f, 1.0f, 1.0f);
 
@@ -446,7 +434,8 @@ int main( void )
 	{
 		float ratio;
 		int width, height;
-		glm::mat4x4 m, p, mvp;			//  mat4x4 m, p, mvp;
+		//glm::mat4x4 m, p, mvp;			//  mat4x4 m, p, mvp;
+		glm::mat4x4 p, mvp;			//  mat4x4 m, p, mvp;
 
 		glfwGetFramebufferSize( window, &width, &height );
 		ratio = width / ( float )height;
@@ -454,145 +443,41 @@ int main( void )
 
 		glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
 
+		//        glUseProgram(program);
+		::g_pShaderManager->useShaderProgram( "mySexyShader" );
+		GLint shaderID = ::g_pShaderManager->getIDFromFriendlyName( "mySexyShader" );
+
 		// Update all the light uniforms...
 		// (for the whole scene)
 		::g_pLightManager->CopyLightInformationToCurrentShader(); 
+
+		// Projection and view don't change per scene (maybe)
+		p = glm::perspective( 0.6f,			// FOV
+								ratio,		// Aspect ratio
+								0.1f,		// Near (as big as possible)
+								1000.0f );	// Far (as small as possible)
+
+		// View or "camera" matrix
+		glm::mat4 v = glm::mat4( 1.0f );	// identity
+
+		v = glm::lookAt( g_cameraXYZ,							// "eye" or "camera" position
+							g_cameraTarget_XYZ,					// "At" or "target" 
+							glm::vec3( 0.0f, 1.0f, 0.0f ) );	// "up" vector
+
+		glUniformMatrix4fv( uniLoc_mView, 1, GL_FALSE,
+							( const GLfloat* ) glm::value_ptr( v ) );
+		glUniformMatrix4fv( uniLoc_mProjection, 1, GL_FALSE,
+							( const GLfloat* ) glm::value_ptr( p ) );
 
 		// "Draw scene" loop
 		unsigned int sizeOfVector = ::g_vecGameObjects.size();
 		for ( int index = 0; index != sizeOfVector; index++ )
 		{
-			// Is there a game object? 
-			if ( ::g_vecGameObjects[index] == 0 )
-			{	// Nothing to draw
-				continue;		// Skip all for loop code and go to next
-			}
+			cGameObject* pTheGO = ::g_vecGameObjects[index];
 
-			// Was near the draw call, but we need the mesh name
-			std::string meshToDraw = ::g_vecGameObjects[index]->meshName;		//::g_GameObjects[index]->meshName;
-
-			sVAOInfo VAODrawInfo;
-			if ( ::g_pVAOManager->lookupVAOFromName( meshToDraw, VAODrawInfo ) == false )
-			{	// Didn't find mesh
-				continue;
-			}
-
-			// Change "Light Objects" position based on light position
-			// The game object sphere that "contains" the light follows the light
-			if ( ::g_vecGameObjects[index]->bIsLight == true )
-			{
-				int lightIndex = ::g_vecGameObjects[index]->myLight;
-				::g_vecGameObjects[index]->position = ::g_pLightManager->vecLights[lightIndex].position;
-				::g_vecGameObjects[index]->diffuseColour = glm::vec4( ::g_pLightManager->vecLights[lightIndex].diffuse, 1.0f );
-			}
-
-			// There IS something to draw
-			m = glm::mat4x4( 1.0f );	//		mat4x4_identity(m);
-
-			glm::mat4 matRreRotZ = glm::mat4x4( 1.0f );
-			matRreRotZ = glm::rotate( matRreRotZ, ::g_vecGameObjects[index]->orientation.z,
-				glm::vec3( 0.0f, 0.0f, 1.0f ) );
-			m = m * matRreRotZ;
-
-			glm::mat4 trans = glm::mat4x4( 1.0f );
-			trans = glm::translate( trans,
-				::g_vecGameObjects[index]->position );
-			m = m * trans;
-
-			glm::mat4 matPostRotZ = glm::mat4x4( 1.0f );
-			matPostRotZ = glm::rotate( matPostRotZ, ::g_vecGameObjects[index]->orientation2.z,
-				glm::vec3( 0.0f, 0.0f, 1.0f ) );
-			m = m * matPostRotZ;
-
-			glm::mat4 matPostRotY = glm::mat4x4( 1.0f );
-			matPostRotY = glm::rotate( matPostRotY, ::g_vecGameObjects[index]->orientation2.y,
-				glm::vec3( 0.0f, 1.0f, 0.0f ) );
-			m = m * matPostRotY;
-
-			glm::mat4 matPostRotX = glm::mat4x4( 1.0f );
-			matPostRotX = glm::rotate( matPostRotX, ::g_vecGameObjects[index]->orientation2.x,
-				glm::vec3( 1.0f, 0.0f, 0.0f ) );
-			m = m * matPostRotX;
-			// TODO: add the other rotation matrix (i.e. duplicate code above)
-
-			float finalScale = VAODrawInfo.scaleForUnitBBox * ::g_vecGameObjects[index]->scale;
-
-			glm::mat4 matScale = glm::mat4x4( 1.0f );
-			matScale = glm::scale( matScale,
-				glm::vec3( finalScale,
-					finalScale,
-					finalScale ) );
-			m = m * matScale;
-
-			// Change from an orthographic view to a perspective view
-			p = glm::perspective( 0.6f,			// FOV
-				ratio,		// Aspect ratio
-				0.1f,			// Near (as big as possible)
-				1000.0f );	// Far (as small as possible)
-
-			// Set Camera Speed according to the user input
-			//g_cameraXYZ.z -= 0.0001f;
-			g_cameraXYZ.x += CAMERASPEED.x;
-			g_cameraXYZ.z += CAMERASPEED.y;
-			g_cameraXYZ.y += CAMERASPEED.z;
-
-			// View or "camera" matrix
-			glm::mat4 v = glm::mat4( 1.0f );	// identity
-
-			v = glm::lookAt( g_cameraXYZ,			// "eye" or "camera" position
-				g_cameraTarget_XYZ,					// "At" or "target"							 
-				//glm::vec3( 0.0f, 1.0f, 0.0f ) );	// "up" vector
-				glm::vec3( 0.0f, 1.0f, 0.0f ) );	// "up" vector
-
-			//mat4x4_mul(mvp, p, m);
-			mvp = p * v * m;			// This way (sort of backwards)
-
-			::g_pShaderManager->useShaderProgram( "mySexyShader" );
-			GLint shaderID = ::g_pShaderManager->getIDFromFriendlyName( "mySexyShader" );
-			
-			glUniformMatrix4fv( uniLoc_mModel, 1, GL_FALSE,
-				( const GLfloat* )glm::value_ptr( m ) );
-			glUniformMatrix4fv( uniLoc_mView, 1, GL_FALSE,
-				( const GLfloat* )glm::value_ptr( v ) );
-			glUniformMatrix4fv( uniLoc_mProjection, 1, GL_FALSE,
-				( const GLfloat* )glm::value_ptr( p ) );
-
-			glm::mat4 mWorldInTranpose = glm::inverse( glm::transpose( m ) );
-			
-			glUniform4f( uniLoc_materialDiffuse,
-				::g_vecGameObjects[index]->diffuseColour.r,
-				::g_vecGameObjects[index]->diffuseColour.g,
-				::g_vecGameObjects[index]->diffuseColour.b,
-				::g_vecGameObjects[index]->diffuseColour.a );
-			//... and all the other object material colours
-			
-
-			//		glPolygonMode( GL_FRONT_AND_BACK, GL_POINT );
-
-			// Check if the bIsWireframe is true and set PolygonMonde to GL_LINE
-			if ( bIsWireframe )	glPolygonMode( GL_FRONT_AND_BACK, GL_LINE );
-			else glPolygonMode( GL_FRONT_AND_BACK, GL_FILL );	// Default
-
-			// TODO Change the object's proprieties to reflect the light
-			//GLfloat whiteSpecularMaterial[] = { 1.0, 1.0, 1.0 };
-			//glMaterialfv(GL_FRONT_AND_BACK, GL_SPECULAR, whiteSpecularMaterial);
-			//GLfloat mShininess[] = { 128 };
-			//glMaterialfv(GL_FRONT_AND_BACK, GL_SHININESS, mShininess);
-			
-			glEnable( GL_DEPTH_TEST );	// Test for Z and store in z buffer
-			glCullFace( GL_BACK );		// Draw only the normals that are "front-facing"
-
-			glBindVertexArray( VAODrawInfo.VAO_ID );
-
-			glDrawElements( GL_TRIANGLES,
-				VAODrawInfo.numberOfIndices,
-				GL_UNSIGNED_INT,	// 32 bit int
-				0 ); // g_numberOfVertices
-
-			glBindVertexArray( 0 );
+			DrawObject( pTheGO );
 
 		}//for ( int index = 0...
-
 
 		std::stringstream ssTitle;
 		ssTitle << "Camera (xyz): "
@@ -601,18 +486,24 @@ int main( void )
 			<< g_cameraXYZ.z;
 		glfwSetWindowTitle( window, ssTitle.str().c_str() );
 
+		// **************************************************
+		// Physics being updated BEFORE the present 
+		// Essentially the "frame time"
+		// How many seconds that have elapsed since we last checked
+		double curTime = glfwGetTime();
+		double deltaTime = curTime - lastTimeStep;
+
+		// Physics Calculation
+		PhysicsStep( deltaTime );
+
+		lastTimeStep = curTime;
+		// **************************************************
+		
+		// "Presents" what we've drawn
+		// Done once per scene 
 		glfwSwapBuffers( window );
 		glfwPollEvents();
 
-		// Essentially the "frame time"
-		// Now many seconds that have elapsed since we last checked
-		double curTime = glfwGetTime();
-		double deltaTime = curTime - lastTimeStep;
-		
-		// Physics Calculation
-		PhysicsStep( curTime, deltaTime );
-
-		lastTimeStep = curTime;
 
 	}// while ( ! glfwWindowShouldClose(window) )
 
@@ -713,8 +604,38 @@ void loadLightObjects()
 	}
 }
 
+
+void DrawClosestPointsOnTable( glm::vec3 thePoint )
+{
+	// std::vector< cPhysTriangle > vecPhysTris;
+	int numberOfTriangles = ::g_MeshPoolTable.vecPhysTris.size();
+
+	for( int triIndex = 0; triIndex != numberOfTriangles; triIndex++ )
+	{
+		// Get reference object for current triangle
+		// (so the line below isn't huge long...)
+		cPhysTriangle& curTriangle = ::g_MeshPoolTable.vecPhysTris[triIndex];
+
+		glm::vec3 theClosestPoint = curTriangle.ClosestPtPointTriangle( thePoint );
+
+		DrawDebugSphere( theClosestPoint, glm::vec4( 1, 1, 1, 1 ), 0.5f );
+
+		//collisionThingy:
+		//	- Which objects collided (sphere - triangle/sphere - sphere)
+		//	- Where, the speed, etc.
+
+
+		//	vecMyColisions.push_Back( collisionThingy );
+		// Calc response...
+		//		glm::reflect( 
+	}
+
+	return;
+}
+
+
 // Update the world 1 "step" in time
-void PhysicsStep( double curTime, double deltaTime )
+void PhysicsStep( double deltaTime )
 {
 	// Distance                          m
 	// Velocity = distance / time		 m/s
@@ -722,6 +643,11 @@ void PhysicsStep( double curTime, double deltaTime )
 
 	// Distance = time * velocity
 	// velocity = time * acceleration
+
+	// Use the white ball location 
+	glm::vec3 thePointToTest = ::g_vecGameObjects[2]->position;
+	DrawClosestPointsOnTable( thePointToTest );
+
 
 	//const glm::vec3 GRAVITY = glm::vec3( 0.0f, -2.0f, 0.0f );
 	const glm::vec3 GRAVITY = glm::vec3(0.0f, 0.0f, 0.0f);		//NO gravity (for now)
@@ -783,7 +709,7 @@ void PhysicsStep( double curTime, double deltaTime )
 				{
 				case eTypeOfObject::SPHERE:
 					//
-					if ( PenetrationTestSphereSphere( pCurGO, pOtherObject, curTime, deltaTime ) )
+					if ( PenetrationTestSphereSphere( pCurGO, pOtherObject, deltaTime ) )
 					{
 						// Return both spheres to previous position before the impact
 						if ( pCurGO->prevPosition != glm::vec3( NULL ) )
@@ -888,6 +814,150 @@ void PhysicsStep( double curTime, double deltaTime )
 			g_pTheCueGO->position = glm::vec3( 0.0f, 100.0f, 0.0f );
 		}
 	}
+
+	return;
+}
+
+// Will draw a ball at this location with this colour
+// Use the same object as the white ball (or draw a copy of it)
+void DrawDebugSphere( glm::vec3 location, glm::vec4 colour,
+	float scale )
+{
+	// TODO: the magic
+	glm::vec3 oldPosition = ::g_pTheDebugSphere->position;
+	glm::vec4 oldDiffuse = ::g_pTheDebugSphere->diffuseColour;
+	bool bOldIsWireFrame = ::g_pTheDebugSphere->bIsWireFrame;
+
+	::g_pTheDebugSphere->position = location;
+	::g_pTheDebugSphere->diffuseColour = colour;
+	::g_pTheDebugSphere->bIsWireFrame = true;
+	::g_pTheDebugSphere->scale = scale;
+
+	DrawObject( ::g_pTheDebugSphere );
+
+	::g_pTheDebugSphere->position = oldPosition;
+	::g_pTheDebugSphere->diffuseColour = oldDiffuse;
+	::g_pTheDebugSphere->bIsWireFrame = bOldIsWireFrame;
+
+	return;
+}
+
+// Draw a single object
+void DrawObject( cGameObject* pTheGO )
+{
+	// Is there a game object? 
+	if( pTheGO == 0 )	//if ( ::g_GameObjects[index] == 0 )
+	{	// Nothing to draw
+		return;		// Skip all for loop code and go to next
+	}
+
+	// Was near the draw call, but we need the mesh name
+	std::string meshToDraw = pTheGO->meshName;		//::g_GameObjects[index]->meshName;
+
+	sVAOInfo VAODrawInfo;
+	if( ::g_pVAOManager->lookupVAOFromName( meshToDraw, VAODrawInfo ) == false )
+	{	// Didn't find mesh
+		return;
+	}
+
+	// Change "Light Objects" position based on light position
+	// The game object sphere that "contains" the light follows the light
+	if( pTheGO->bIsLight == true )
+	{
+		int lightIndex = pTheGO->myLight;
+		pTheGO->position = ::g_pLightManager->vecLights[lightIndex].position;
+		pTheGO->diffuseColour = glm::vec4( ::g_pLightManager->vecLights[lightIndex].diffuse, 1.0f );
+	}
+
+	// There IS something to draw
+
+	glm::mat4x4 mModel = glm::mat4x4( 1.0f );	//		mat4x4_identity(m);
+
+	glm::mat4 matRreRotZ = glm::mat4x4( 1.0f );
+	matRreRotZ = glm::rotate( matRreRotZ, pTheGO->orientation.z,
+								glm::vec3( 0.0f, 0.0f, 1.0f ) );
+	mModel = mModel * matRreRotZ;
+
+	glm::mat4 trans = glm::mat4x4( 1.0f );
+	trans = glm::translate( trans, pTheGO->position );
+	mModel = mModel * trans;
+
+	glm::mat4 matPostRotZ = glm::mat4x4( 1.0f );
+	matPostRotZ = glm::rotate( matPostRotZ, pTheGO->orientation2.z,
+								glm::vec3( 0.0f, 0.0f, 1.0f ) );
+	mModel = mModel * matPostRotZ;
+
+	glm::mat4 matPostRotY = glm::mat4x4( 1.0f );
+	matPostRotY = glm::rotate( matPostRotY, pTheGO->orientation2.y,
+								glm::vec3( 0.0f, 1.0f, 0.0f ) );
+	mModel = mModel * matPostRotY;
+
+	glm::mat4 matPostRotX = glm::mat4x4( 1.0f );
+	matPostRotX = glm::rotate( matPostRotX, pTheGO->orientation2.x,
+								glm::vec3( 1.0f, 0.0f, 0.0f ) );
+	mModel = mModel * matPostRotX;
+	// TODO: add the other rotation matrix (i.e. duplicate code above)
+
+	// assume that scale to unit bounding box
+	// ************* BEWARE *****************
+	//			float finalScale = VAODrawInfo.scaleForUnitBBox * ::g_vecGameObjects[index]->scale;
+	// We have taken out the scale adjustment so the scale is AS IT IS FROM THE MODEL
+	//float finalScale = pTheGO->scale;
+	float finalScale = VAODrawInfo.scaleForUnitBBox * pTheGO->scale;
+
+	glm::mat4 matScale = glm::mat4x4( 1.0f );
+	matScale = glm::scale( matScale,
+							glm::vec3( finalScale,
+										finalScale,
+										finalScale ) );
+	mModel = mModel * matScale;
+
+	glUniformMatrix4fv( uniLoc_mModel, 1, GL_FALSE,
+						( const GLfloat* ) glm::value_ptr( mModel ) );
+	
+	glm::mat4 mWorldInTranpose = glm::inverse( glm::transpose( mModel ) );
+
+	glUniform4f( uniLoc_materialDiffuse,
+					pTheGO->diffuseColour.r,
+					pTheGO->diffuseColour.g,
+					pTheGO->diffuseColour.b,
+					pTheGO->diffuseColour.a );
+	//...and all the other object material colours
+
+	if( pTheGO->bIsWireFrame )
+	{
+		glUniform1f( uniLoc_bIsDebugWireFrameObject, 1.0f );	// TRUE
+	}
+	else
+	{
+		glUniform1f( uniLoc_bIsDebugWireFrameObject, 0.0f );	// FALSE
+	}
+
+
+	if( pTheGO->bIsWireFrame )
+	{
+		glPolygonMode( GL_FRONT_AND_BACK, GL_LINE );	// Default
+		//glEnable(GL_DEPTH_TEST);		// Test for z and store in z buffer
+		glDisable( GL_CULL_FACE );
+	}
+	else
+	{
+		glPolygonMode( GL_FRONT_AND_BACK, GL_FILL );	// Default
+		glEnable( GL_DEPTH_TEST );		// Test for z and store in z buffer
+		glEnable( GL_CULL_FACE );
+	}
+
+	glCullFace( GL_BACK );
+
+
+	glBindVertexArray( VAODrawInfo.VAO_ID );
+
+	glDrawElements( GL_TRIANGLES,
+		VAODrawInfo.numberOfIndices,		// testMesh.numberOfTriangles * 3,	// How many vertex indices
+		GL_UNSIGNED_INT,					// 32 bit int 
+		0 );
+	// Unbind that VAO
+	glBindVertexArray( 0 );
 
 	return;
 }

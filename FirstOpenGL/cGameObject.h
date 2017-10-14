@@ -44,6 +44,8 @@ public:
 	bool bIsLight;		// is this object a light representation?
 	int myLight;		// which light is this?
 
+	bool bIsWireFrame;
+
 	glm::vec4 diffuseColour;	//  The actual color when lights hit it
 
 	std::string meshName;		// mesh I'd  like to draw

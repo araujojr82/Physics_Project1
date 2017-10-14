@@ -227,3 +227,41 @@ void cMesh::CalculateNormals( void )
 
 	return;
 }
+
+
+// Used for the physics calculations
+void cMesh::GeneratePhysicsTriangles( void )
+{
+	//std::vector< cPhysTriangle > vecPhysTris;
+
+	for( int triIndex = 0; triIndex < this->numberOfTriangles; triIndex++ )
+	{
+		// 3 4 132 80 
+		int triVert0_index = this->pTriangles[triIndex].vertex_ID_0;
+		int triVert1_index = this->pTriangles[triIndex].vertex_ID_1;
+		int triVert2_index = this->pTriangles[triIndex].vertex_ID_2;
+
+
+		cPhysTriangle tempTri;
+
+		cVertex_xyz_rgb V0 = this->pVertices[triVert0_index];
+		tempTri.vertex[0].x = V0.x;
+		tempTri.vertex[0].y = V0.y;
+		tempTri.vertex[0].z = V0.z;
+
+		cVertex_xyz_rgb V1 = this->pVertices[triVert1_index];
+		tempTri.vertex[1].x = V1.x;
+		tempTri.vertex[1].y = V1.y;
+		tempTri.vertex[1].z = V1.z;
+
+		cVertex_xyz_rgb V2 = this->pVertices[triVert2_index];
+		tempTri.vertex[2].x = V2.x;
+		tempTri.vertex[2].y = V2.y;
+		tempTri.vertex[2].z = V2.z;
+
+		this->vecPhysTris.push_back( tempTri );
+
+	}//for ( ; 
+
+	return;
+}
