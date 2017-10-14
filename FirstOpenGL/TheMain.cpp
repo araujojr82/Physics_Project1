@@ -34,10 +34,13 @@
 int g_GameObjNumber = 0;				// game object vector position number 
 int g_LightObjNumber = 0;				// light object vector position
 
+cGameObject* g_pTheCueGO;
+bool g_isThereMovement = false;
+
 
 glm::vec3 CAMERASPEED = glm::vec3( 0.0f, 0.0f, 0.0f );
 static const int g_NUMBER_OF_LIGHTS = 5;
-static const float g_FRICTION_FORCE = 0.01;
+static const float g_FRICTION_FORCE = 0.01f;
 
 bool bIsWireframe = false;
 
@@ -61,7 +64,7 @@ struct sWindowConfig
 public:
 	int height = 480;
 	int width = 640;
-	std::string title = "Graphics 101 is Awesome!";
+	std::string title = "Physics 101 is Awesome!";
 };
 
 // Forward declare the Functions
@@ -73,18 +76,6 @@ void PhysicsStep( double curTime, double deltaTime );
 bool LoadModelsIntoScene(std::string &error);
 bool Load3DModelsIntoMeshManager(int shaderID, cVAOMeshManager* pVAOManager, std::string &error);
 float generateRandomNumber( float min, float max );
-
-//struct sGOparameters		// for the Game Objects' input file
-//{
-//	std::string meshname;
-//	int nObjects;
-//	float x, y, z, scale;
-//	std::string random;
-//	float rangeX, rangeY, rangeZ, rangeScale;
-//};
-//
-//sGOparameters parseObjLine(std::ifstream &source);
-//void loadObjectsFile(std::string fileName);
 
 static void error_callback( int error, const char* description )
 {
@@ -104,21 +95,24 @@ static void key_callback( GLFWwindow* window, int key, int scancode, int action,
 		else bIsWireframe = true;
 	}
 
-	//// Change object in g_GameObject
+	// "Shoot" the white ball (at random speed for now)
+	// TODO change this to be controlled by user
 	if( key == GLFW_KEY_SPACE && action == GLFW_PRESS )
 	{
-		//pTempGO->vel.x = 0.0f;
-		//::g_vecGameObjects[2]->vel.x = 10.0f;
 		::g_vecGameObjects[2]->vel.x = generateRandomNumber( 6.0f, 12.0f );
 		::g_vecGameObjects[2]->vel.z = generateRandomNumber( 6.0f, 12.0f );
+	}
 
-	//	if( g_GameObjNumber < ( ::g_vecGameObjects.size() - 1 ) ) {
-	//		g_GameObjNumber++;
-	//	}
-	//	else
-	//	{
-	//		g_GameObjNumber = 0;
-	//	}
+	// Change "target" selected game object
+	if( key == GLFW_KEY_TAB && action == GLFW_PRESS )
+	{
+		if( g_GameObjNumber < ( ::g_vecGameObjects.size() - 1 ) ) {
+			g_GameObjNumber++;
+		}
+		else
+		{
+			g_GameObjNumber = 0;
+		}
 	}
 
 	// Change light colour
@@ -157,7 +151,7 @@ static void key_callback( GLFWwindow* window, int key, int scancode, int action,
 		}
 	}
 
-	// Change Camera Velocity
+	// Change Game Object's position
 	switch( key )
 	{
 	case GLFW_KEY_UP:		// Up arrow
@@ -234,70 +228,65 @@ static void key_callback( GLFWwindow* window, int key, int scancode, int action,
 		break;
 	}
 
-	// Change camera Acceleration
-	switch( key )
-	{
-	case GLFW_KEY_J:		// Left
-		CAMERASPEED.x -= 0.00001f;
-		break;
-	case GLFW_KEY_L:		// Right
-		CAMERASPEED.x += 0.00001f;
-		break;
-	case GLFW_KEY_I:		// Forward (along z)
-		CAMERASPEED.z += 0.00001f;
-		break;
-	case GLFW_KEY_K:		// Backwards (along z)
-		CAMERASPEED.z -= 0.00001f;
-		break;
-	case GLFW_KEY_U:		// "Down" (along y axis)
-		CAMERASPEED.y -= 0.00001f;
-		break;
-	case GLFW_KEY_O:		// "Up" (along y axis)
-		CAMERASPEED.y += 0.00001f;
-		break;
-	}
-
-	// Stop Camera
-	if( key == GLFW_KEY_P && action == GLFW_PRESS )
-	{
-		CAMERASPEED = glm::vec3( 0.0f, 0.0f, 0.0f );
-	}
+	// Probably wont need this anymore
+	//// Change camera Acceleration
+	//switch( key )
+	//{
+	//case GLFW_KEY_J:		// Left
+	//	CAMERASPEED.x -= 0.00001f;
+	//	break;
+	//case GLFW_KEY_L:		// Right
+	//	CAMERASPEED.x += 0.00001f;
+	//	break;
+	//case GLFW_KEY_I:		// Forward (along z)
+	//	CAMERASPEED.z += 0.00001f;
+	//	break;
+	//case GLFW_KEY_K:		// Backwards (along z)
+	//	CAMERASPEED.z -= 0.00001f;
+	//	break;
+	//case GLFW_KEY_U:		// "Down" (along y axis)
+	//	CAMERASPEED.y -= 0.00001f;
+	//	break;
+	//case GLFW_KEY_O:		// "Up" (along y axis)
+	//	CAMERASPEED.y += 0.00001f;
+	//	break;
+	//}
+	//// Stop Camera
+	//if( key == GLFW_KEY_P && action == GLFW_PRESS )
+	//{
+	//	CAMERASPEED = glm::vec3( 0.0f, 0.0f, 0.0f );
+	//}
 
 	// Change Selected Light
 	switch ( key )
 	{
 	case GLFW_KEY_1:
 		g_LightObjNumber = 0;
-		g_GameObjNumber = 20;
 		break;
 	case GLFW_KEY_2:
 		g_LightObjNumber = 1;
-		g_GameObjNumber = 21;
 		break;
 	case GLFW_KEY_3:
 		g_LightObjNumber = 2;
-		g_GameObjNumber = 22;
 		break;
 	case GLFW_KEY_4:
 		g_LightObjNumber = 3;
-		//g_GameObjNumber = 23;
 		break;
 	case GLFW_KEY_5:
 		g_LightObjNumber = 4;
-		//g_GameObjNumber = 24;
 		break;
-	case GLFW_KEY_6:
-		g_LightObjNumber = 5;
-		break;
-	case GLFW_KEY_7:
-		g_LightObjNumber = 6;
-		break;
-	case GLFW_KEY_8:
-		g_LightObjNumber = 7;
-		break;
-	case GLFW_KEY_9:
-		g_LightObjNumber = 8;
-		break;
+	//case GLFW_KEY_6:
+	//	g_LightObjNumber = 5;
+	//	break;
+	//case GLFW_KEY_7:
+	//	g_LightObjNumber = 6;
+	//	break;
+	//case GLFW_KEY_8:
+	//	g_LightObjNumber = 7;
+	//	break;
+	//case GLFW_KEY_9:
+	//	g_LightObjNumber = 8;
+	//	break;
 	}
 
 	return;
@@ -379,16 +368,12 @@ int main( void )
 
 	GLint sexyShaderID = ::g_pShaderManager->getIDFromFriendlyName("mySexyShader");	
 
-	//loadMeshesFile( "meshlist.txt", sexyShaderID );
-
 	std::string error;
 	if (!Load3DModelsIntoMeshManager(sexyShaderID, ::g_pVAOManager, error))
 	{
-		std::cout << "Not all models were loaded..." << std::endl;
+		std::cout << "Not all meshes were loaded..." << std::endl;
 		std::cout << error << std::endl;
 	}
-
-	//loadObjectsFile("objects.txt");
 
 	if (!LoadModelsIntoScene(error))
 	{
@@ -415,13 +400,11 @@ int main( void )
 	::g_pLightManager->CreateLights( g_NUMBER_OF_LIGHTS );	// There are 10 lights in the shader
 	::g_pLightManager->LoadShaderUniformLocations( currentProgID );
 
-	// Change ZERO (the SUN) light position
+	// Change ZERO light position "Main Top light"
 	::g_pLightManager->vecLights[0].position = glm::vec3(0.0f, 45.0f, 0.0f);
 	//::g_pLightManager->vecLights[0].diffuse = glm::vec3( 1.0f, 1.0f, 1.0f );
 	//::g_pLightManager->vecLights[0].ambient = glm::vec3( 1.0f, 1.0f, 1.0f );
 	::g_pLightManager->vecLights[0].attenuation.y = 0.06f;		// Change the linear attenuation
-
-
 	//set the diffuse light to white
 	::g_pLightManager->vecLights[0].diffuse = glm::vec3(1.0f, 1.0f, 1.0f);
 
@@ -433,6 +416,7 @@ int main( void )
 	
 
 	// ADD 4 MORE LIGHTS========================================
+	// One at each "corner"
 	{
 
 		::g_pLightManager->vecLights[1].position = glm::vec3( -30.0f, 20.0f, 18.0f );
@@ -475,8 +459,6 @@ int main( void )
 		::g_pLightManager->CopyLightInformationToCurrentShader(); 
 
 		// "Draw scene" loop
-		//for ( int index = 0; index != MAXNUMBEROFGAMEOBJECTS; index++ )
-
 		unsigned int sizeOfVector = ::g_vecGameObjects.size();
 		for ( int index = 0; index != sizeOfVector; index++ )
 		{
@@ -495,7 +477,7 @@ int main( void )
 				continue;
 			}
 
-			// Change Light Objects position based on light position
+			// Change "Light Objects" position based on light position
 			// The game object sphere that "contains" the light follows the light
 			if ( ::g_vecGameObjects[index]->bIsLight == true )
 			{
@@ -507,22 +489,10 @@ int main( void )
 			// There IS something to draw
 			m = glm::mat4x4( 1.0f );	//		mat4x4_identity(m);
 
-			//::g_vecGameObjects[index]->orientation.z += ( ::g_vecGameObjects[index]->vel.z ) / 30;
-			//::g_vecGameObjects[index]->orientation.y += ( ::g_vecGameObjects[index]->vel.y ) / 10;
-			//::g_vecGameObjects[index]->orientation.x += ( ::g_vecGameObjects[index]->vel.x ) / 10;
-
 			glm::mat4 matRreRotZ = glm::mat4x4( 1.0f );
 			matRreRotZ = glm::rotate( matRreRotZ, ::g_vecGameObjects[index]->orientation.z,
 				glm::vec3( 0.0f, 0.0f, 1.0f ) );
 			m = m * matRreRotZ;
-
-			//matRreRotZ = glm::rotate( matRreRotZ, ::g_vecGameObjects[index]->orientation.y,
-			//	glm::vec3( 0.0f, 1.0f, 0.0f ) );
-			//m = m * matRreRotZ;
-
-			//matRreRotZ = glm::rotate( matRreRotZ, ::g_vecGameObjects[index]->orientation.x,
-			//	glm::vec3( 1.0f, 0.0f, 0.0f ) );
-			//m = m * matRreRotZ;
 
 			glm::mat4 trans = glm::mat4x4( 1.0f );
 			trans = glm::translate( trans,
@@ -533,14 +503,6 @@ int main( void )
 			matPostRotZ = glm::rotate( matPostRotZ, ::g_vecGameObjects[index]->orientation2.z,
 				glm::vec3( 0.0f, 0.0f, 1.0f ) );
 			m = m * matPostRotZ;
-
-			//// IF the game object isn't a light object, it will rotate as normal
-			//if ( !::g_vecGameObjects[index]->bIsLight )
-			//{
-			//	::g_vecGameObjects[index]->orientation2.x += ::g_vecGameObjects[index]->rotation.x;
-			//	::g_vecGameObjects[index]->orientation2.y += ::g_vecGameObjects[index]->rotation.y;
-			//	::g_vecGameObjects[index]->orientation2.z += ::g_vecGameObjects[index]->rotation.z;
-			//}
 
 			glm::mat4 matPostRotY = glm::mat4x4( 1.0f );
 			matPostRotY = glm::rotate( matPostRotY, ::g_vecGameObjects[index]->orientation2.y,
@@ -611,11 +573,11 @@ int main( void )
 			if ( bIsWireframe )	glPolygonMode( GL_FRONT_AND_BACK, GL_LINE );
 			else glPolygonMode( GL_FRONT_AND_BACK, GL_FILL );	// Default
 
-			
-			GLfloat whiteSpecularMaterial[] = { 1.0, 1.0, 1.0 };
-			glMaterialfv(GL_FRONT_AND_BACK, GL_SPECULAR, whiteSpecularMaterial);
-			GLfloat mShininess[] = { 128 };
-			glMaterialfv(GL_FRONT_AND_BACK, GL_SHININESS, mShininess);
+			// TODO Change the object's proprieties to reflect the light
+			//GLfloat whiteSpecularMaterial[] = { 1.0, 1.0, 1.0 };
+			//glMaterialfv(GL_FRONT_AND_BACK, GL_SPECULAR, whiteSpecularMaterial);
+			//GLfloat mShininess[] = { 128 };
+			//glMaterialfv(GL_FRONT_AND_BACK, GL_SHININESS, mShininess);
 			
 			glEnable( GL_DEPTH_TEST );	// Test for Z and store in z buffer
 			glCullFace( GL_BACK );		// Draw only the normals that are "front-facing"
@@ -658,7 +620,6 @@ int main( void )
 	glfwDestroyWindow( window );
 	glfwTerminate();
 
-	// 
 	delete ::g_pShaderManager;
 	delete ::g_pVAOManager;
 
@@ -762,19 +723,21 @@ void PhysicsStep( double curTime, double deltaTime )
 	// Distance = time * velocity
 	// velocity = time * acceleration
 
-	//// HACK: Change all objects back to white (before collision test)
-	//for ( int index = 0; index != ::g_vecGameObjects.size(); index++ )
-	//{
-	//	cGameObject* pCurGO = ::g_vecGameObjects[index];
-	//	pCurGO->diffuseColour = glm::vec4( 1.0f, 1.0f, 1.0f, 1.0f );
-	//}//for ( int index
-
 	//const glm::vec3 GRAVITY = glm::vec3( 0.0f, -2.0f, 0.0f );
-	const glm::vec3 GRAVITY = glm::vec3(0.0f, 0.0f, 0.0f);
+	const glm::vec3 GRAVITY = glm::vec3(0.0f, 0.0f, 0.0f);		//NO gravity (for now)
+	
+	// Always set this to false before checking the movement in the loop
+	g_isThereMovement = false;
 
 	// Identical to the 'render' (drawing) loop
 	for ( int index = 0; index != ::g_vecGameObjects.size(); index++ )
 	{
+		// Look for the cue object
+		if( g_vecGameObjects[index]->typeOfObject == eTypeOfObject::CUE )
+		{	// We found the CUE!
+			g_pTheCueGO = ::g_vecGameObjects[index];
+		}
+
 		cGameObject* pCurGO = ::g_vecGameObjects[index];
 
 		// Is this object to be updated?
@@ -782,6 +745,7 @@ void PhysicsStep( double curTime, double deltaTime )
 		{	// DON'T update this
 			continue;		// Skip everything else in the for
 		}
+		pCurGO->prevPosition = pCurGO->position;
 
 		// Explicity Euler integration (RK4)
 		// New position is based on velocity over time
@@ -794,37 +758,11 @@ void PhysicsStep( double curTime, double deltaTime )
 
 		pCurGO->vel += deltaVelocity;
 
-		bool isThereMovement = false;
-		cGameObject* pTheCueGO;
-		if( index == 2 )		// ITS THE WHITE BALL!
-		{
-			for( int index_cue = 0; index_cue != ::g_vecGameObjects.size(); index_cue++ )
-			{
-				if( g_vecGameObjects[index_cue]->typeOfObject == eTypeOfObject::CUE )
-				{	// We found the CUE!
-					pTheCueGO = ::g_vecGameObjects[index_cue];
-				}
-				if( pCurGO->bIsUpdatedInPhysics )
-				{ // Check to see if the object is in movement
-					if( ::g_vecGameObjects[index_cue]->vel != glm::vec3( 0.0f, 0.0f, 0.0f ) )
-					{	// is in movement
-						isThereMovement = true;
-					}
-				}
-
-			}
-			if( pTheCueGO != NULL )
-			{
-				if( !isThereMovement )
-				{ // All balls are static, so we draw the cue next to the white ball
-				  // HACK, set position of cue depending on White ball position
-					pTheCueGO->position = pCurGO->position;
-				}
-				else
-				{ // At least one ball is in movement so we "hide away" the cue
-					pTheCueGO->position = glm::vec3( 0.0f, 100.0f, 0.0f );
-				}
-			}
+		// Move the cue to the white ball when there's no movement
+		// Check to see if the object is moving
+		if( pCurGO->vel != glm::vec3( 0.0f, 0.0f, 0.0f ) )
+		{	// is in movement
+			g_isThereMovement = true;
 		}
 		
 		// HACK: Collision step
@@ -840,49 +778,40 @@ void PhysicsStep( double curTime, double deltaTime )
 
 				cGameObject* pOtherObject = ::g_vecGameObjects[indexEO];
 				// Is another object
+				
 				switch ( pOtherObject->typeOfObject )
 				{
 				case eTypeOfObject::SPHERE:
 					//
 					if ( PenetrationTestSphereSphere( pCurGO, pOtherObject, curTime, deltaTime ) )
 					{
-						//pCurGO->diffuseColour = glm::vec4( generateRandomNumber(0.0f, 1.0f),
-						//								   generateRandomNumber(0.0f, 1.0f),
-						//								   generateRandomNumber(0.0f, 1.0f),
-						//								   1.0f );
+						// Return both spheres to previous position before the impact
+						if ( pCurGO->prevPosition != glm::vec3( NULL ) )
+							pCurGO->position = pCurGO->prevPosition;
 
-						//pOtherObject->diffuseColour = glm::vec4( generateRandomNumber(0.0f, 1.0f),
-						//										 generateRandomNumber(0.0f, 1.0f),
-						//										 generateRandomNumber(0.0f, 1.0f),
-						//										 1.0f);
+						if( pOtherObject->prevPosition != glm::vec3( NULL ) )
+							pOtherObject->position = pOtherObject->prevPosition;
 
+						// Call the reaction on the Spheres
 						bounceSpheres( pCurGO, pOtherObject );
 					}
 
 					break;
 
+				// TODO - IMPLEMENT THIS ASAP
 				//case eTypeOfObject::PLANE:
 				////    CalcSpherePlaneColision( pCurGO, pGO_to_Compare );
 				//	break;
 				}
 			}
 
-			//switch ( pGO_to_Compare->typeOfObject )
-			//{
-			//case eTypeOfObject::SPHERE:
-			//	CalcSphereSphereColision( pCurGO, pGO_to_Compare );
-			//	break;
-			
-			//// More if I'd like that.
-			//
-			//}		
-
 			// HACK to stop the balls, simulate the frictional force
 			if (pCurGO->vel.x < 0.01f && pCurGO->vel.x > -0.01f)
-			{
+			{   // Check to see if the ball is (almost) stopped and stop it (otherwise it will never stop)
 				pCurGO->vel.x = 0.0f;
 			}
 
+			// If it's moving, apply the frictional force
 			if (pCurGO->vel.x < 0.0f)
 			{
 				pCurGO->vel.x += g_FRICTION_FORCE;
@@ -905,8 +834,7 @@ void PhysicsStep( double curTime, double deltaTime )
 			{
 				pCurGO->vel.z -= g_FRICTION_FORCE;
 			}
-
-			
+						
 
 			// HACK
 			const float SURFACEOFGROUND = 0.0f;
@@ -922,7 +850,6 @@ void PhysicsStep( double curTime, double deltaTime )
 			{	// Object has "hit" the ground 
 				pCurGO->vel.y = +( fabs( pCurGO->vel.y ) );
 			}
-
 			if ( ( pCurGO->position.x + pCurGO->radius ) >= RIGHTSIDEWALL )
 			{	// Object too far to the right
 				// Object has penetrated the right plane
@@ -933,24 +860,34 @@ void PhysicsStep( double curTime, double deltaTime )
 				// Object has penetrated the left plane
 				pCurGO->vel.x = +( fabs( pCurGO->vel.x ) );
 			}
-
 			if ((pCurGO->position.z - pCurGO->radius) <= BACKSIDEWALL)
 			{	// Object too far to the back
 				// Object has penetrated the back plane
 				pCurGO->vel.z = +(fabs(pCurGO->vel.z));
 			}
-
-			if ((pCurGO->position.z + pCurGO->radius) >= FRONTSIDEWALL)
+			if( ( pCurGO->position.z + pCurGO->radius ) >= FRONTSIDEWALL )
 			{	// Object too far to the front
 				// Object has penetrated the front plane
-				pCurGO->vel.z = -(fabs(pCurGO->vel.z));
+				pCurGO->vel.z = -( fabs( pCurGO->vel.z ) );
 			}
-
-
 			break;
 		};
-
 	}//for ( int index...
+	
+	// If there's a Cue object, AND there's no movement on objects
+	// set the cue position the same as the white ball
+	if( g_pTheCueGO != NULL )
+	{
+		if( !g_isThereMovement )
+		{ // All balls are static, so we draw the cue next to the white ball
+		  // HACK, set position of cue depending on White ball position
+			g_pTheCueGO->position = ::g_vecGameObjects[2]->position;	// [2] ITS THE WHITE BALL! (Hardcoded, for now)
+		}
+		else
+		{ // At least one ball is in movement so we "hide away" the cue
+			g_pTheCueGO->position = glm::vec3( 0.0f, 100.0f, 0.0f );
+		}
+	}
 
 	return;
 }

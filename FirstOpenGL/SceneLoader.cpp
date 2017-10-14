@@ -102,11 +102,11 @@ bool LoadModelsIntoScene(std::string &error)
 			pTempGO->typeOfObject = eTypeOfObject::SPHERE;
 			pTempGO->radius = allObjects[index].radius;
 
-			if( index != 2 ){
-				/*pTempGO->vel.x = generateRandomNumber( 2.0f, 4.0f );
-				pTempGO->vel.z = generateRandomNumber( 2.0f, 4.0f );
-				pTempGO->vel.y = 0.0f;*/
-			}
+			//if( index != 2 ){
+			//	pTempGO->vel.x = generateRandomNumber( -6.0f, 6.0f );
+			//	pTempGO->vel.z = generateRandomNumber( -6.0f, 6.0f );
+			//	pTempGO->vel.y = 0.0f;
+			//}
 			
 		}
 		else if (allObjects[index].type == "PLANE") {

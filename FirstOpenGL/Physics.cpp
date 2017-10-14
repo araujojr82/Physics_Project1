@@ -56,6 +56,26 @@ glm::vec3 scale( const glm::vec3& v, glm::vec3 a ) {
 
 glm::vec3 projectUonV( const glm::vec3& u, const glm::vec3& v ) {
 	glm::vec3 r;
-	r = scale( v, ( u * v ) / ( v * v ) );
+
+	//r = scale( v, ( u * v ) / ( v * v ) );
+
+	// Create some temporary vectors to check for zero division	
+	glm::vec3 tempVec3_a;
+	glm::vec3 tempVec3_a1;
+	glm::vec3 tempVec3_a2;
+
+	tempVec3_a1 = ( u * v );
+	tempVec3_a2 = ( v * v );
+
+	if( tempVec3_a2.x != 0.0f )	tempVec3_a.x = tempVec3_a1.x / tempVec3_a2.x;
+	else						tempVec3_a.x = 0.0f; // tempVec3_a1.x;
+	if( tempVec3_a2.y != 0.0f )	tempVec3_a.y = tempVec3_a1.y / tempVec3_a2.y;
+	else						tempVec3_a.y = 0.0f; // tempVec3_a1.y;
+	if( tempVec3_a2.z != 0.0f )	tempVec3_a.z = tempVec3_a1.z / tempVec3_a2.z;
+	else						tempVec3_a.z = 0.0f; // tempVec3_a1.z;
+
+	r = scale( v, tempVec3_a );
+	
+
 	return r;
 }
