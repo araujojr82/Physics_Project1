@@ -131,7 +131,7 @@ static void key_callback( GLFWwindow* window, int key, int scancode, int action,
 	// TODO change this to be controlled by user
 	if( key == GLFW_KEY_SPACE && action == GLFW_PRESS )
 	{
-		::g_vecGameObjects[2]->vel.x = generateRandomNumber( 16.0f, 22.0f );
+		::g_vecGameObjects[2]->vel.x = generateRandomNumber( 6.0f, 12.0f );
 		//::g_vecGameObjects[2]->vel.z = generateRandomNumber( 6.0f, 12.0f );
 	}
 
@@ -714,13 +714,14 @@ void PhysicsStep( double deltaTime )
 
 		//Check future position to see if it's beyond the borders of the table
 		glm::vec3 futurePosition = pCurGO->position += deltaPosition;
-		if( futurePosition.x - pCurGO->radius > RIGHTSIDEWALL ||
-			futurePosition.x + pCurGO->radius < LEFTSIDEWALL ||
-			futurePosition.z - pCurGO->radius > FRONTSIDEWALL ||
-			futurePosition.z + pCurGO->radius < BACKSIDEWALL )
-		{ // The possition is beyond the borders of the table
-		  // Go back to Older position (previous frame)
-			pCurGO->position = olderPosition;
+		if( futurePosition.x > RIGHTSIDEWALL ||
+			futurePosition.x < LEFTSIDEWALL ||
+			futurePosition.z > FRONTSIDEWALL ||
+			futurePosition.z < BACKSIDEWALL )
+		{ // The position is beyond the borders of the table
+		  // Go back to the first position of the object
+			pCurGO->position = pCurGO->initialPosition;
+			pCurGO->vel = glm::vec3( 0.0f );
 		}
 		else
 		{	// Move as normal
@@ -819,25 +820,7 @@ void PhysicsStep( double deltaTime )
 								if( pCurGO->prevPosition != glm::vec3( NULL ) )
 									pCurGO->position = pCurGO->prevPosition;
 
-								glm::vec3 initialPosition = pCurGO->position;
-								glm::vec3 initialVelocity = pCurGO->vel;
-
 								bounceSphereAgainstPlane( pCurGO, pOtherObject, triangleNormal );
-
-								//if( pCurGO->position.x - pCurGO->radius > RIGHTSIDEWALL ||
-								//	pCurGO->position.x + pCurGO->radius < LEFTSIDEWALL ||
-								//	pCurGO->position.z - pCurGO->radius > FRONTSIDEWALL ||
-								//	pCurGO->position.z + pCurGO->radius < BACKSIDEWALL )
-								//{
-								//	glm::vec3 deltaPosition = ( float ) deltaTime * initialVelocity;
-								//	pCurGO->position -= deltaPosition;
-
-								//	std::cout << "Weird collision has occur between: Object " << index << " and Point " << i_point << std::endl;
-								//	std::cout << "Initial Position X: " << initialPosition.x << " / Z: " << initialPosition.z << " / Y: " << initialPosition.y << std::endl;
-								//	std::cout << "Final Position X  : " << pCurGO->position.x << " / Z: " << pCurGO->position.z << " / Y: " << pCurGO->position.y << std::endl;
-								//	std::cout << "Initial Velocity X: " << initialVelocity.x << " / Z: " << initialVelocity.z << " / Y: " << initialVelocity.y << std::endl;
-								//	std::cout << "Final Velocity X  : " << pCurGO->vel.x << " / Z: " << pCurGO->vel.z << " / Y: " << pCurGO->vel.y << std::endl;
-								//}
 
 								break;
 							}

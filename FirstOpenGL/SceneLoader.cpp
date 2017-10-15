@@ -71,6 +71,8 @@ bool LoadModelsIntoScene(std::string &error)
 		pTempGO->position.z = allObjects[index].z;
 		pTempGO->scale = allObjects[index].scale;
 
+		pTempGO->initialPosition = pTempGO->position;
+
 		// Add colour
 		pTempGO->diffuseColour = glm::vec4( allObjects[index].red,
 											allObjects[index].green,

@@ -22,6 +22,7 @@ public:
 	cGameObject();		// constructor
 	~cGameObject();		// destructor
 	glm::vec3 position;
+	glm::vec3 initialPosition;
 	glm::vec3 prevPosition;
 	glm::vec3 orientation;
 	glm::vec3 orientation2;		// HACK (will elimiate this with)
