@@ -19,7 +19,7 @@ bool PenetrationTestSphereSphere( cGameObject* pA, cGameObject* pB, double delta
 
 void bounceSpheres( cGameObject* pA, cGameObject* pB );
 
-void bounceSphereAgainstPlane( cGameObject* pA, cGameObject* pB );
+void bounceSphereAgainstPlane( cGameObject* pA, cGameObject* pB, glm::vec3 tNormal );
 
 bool AlmostEqualRelativeAndAbs( float A, float B );
 

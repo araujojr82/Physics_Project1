@@ -48,7 +48,13 @@ bool g_isThereMovement = false;
 // Remember to #include <vector>...
 std::vector< cGameObject* > g_vecGameObjects;
 
-std::vector< glm::vec3 > g_vecPoints;
+struct pointTriangles{
+	glm::vec3 point;
+	cPhysTriangle triangle;
+};
+
+//std::vector< glm::vec3 > g_vecPoints;
+std::vector< pointTriangles > g_vecPoints;
 
 cGameObject* g_pTheDebugSphere;
 cGameObject* g_pTheCueGO;
@@ -99,6 +105,8 @@ float generateRandomNumber( float min, float max );
 void DrawObject( cGameObject* pTheGO );
 void DrawDebugSphere( glm::vec3 location, glm::vec4 colour, float scale );
 void DrawClosestPointsOnTable( glm::vec3 thePoint );
+
+glm::vec3 returnNormal( glm::vec3 vertex[3] );
 
 
 static void error_callback( int error, const char* description )
@@ -619,11 +627,13 @@ void DrawClosestPointsOnTable( glm::vec3 thePoint )
 		// (so the line below isn't huge long...)
 		cPhysTriangle& curTriangle = ::g_MeshPoolTable.vecPhysTris[triIndex];
 
-		glm::vec3 theClosestPoint = curTriangle.ClosestPtPointTriangle( thePoint );
+		pointTriangles theClosestPoint;
+		theClosestPoint.point = curTriangle.ClosestPtPointTriangle( thePoint );
+		theClosestPoint.triangle = curTriangle;
 
 		::g_vecPoints.push_back( theClosestPoint );
 
-		DrawDebugSphere( theClosestPoint, glm::vec4( 1, 1, 1, 1 ), 0.2f );
+		DrawDebugSphere( theClosestPoint.point, glm::vec4( 1, 1, 1, 1 ), 0.2f );
 	}
 
 		//collisionThingy:
@@ -653,6 +663,7 @@ void PhysicsStep( double deltaTime )
 	//glm::vec3 thePointToTest = ::g_vecGameObjects[2]->position;
 	//DrawClosestPointsOnTable( thePointToTest );
 
+	glm::vec3 triangleNormal = glm::vec3( 0.0f );
 
 	//const glm::vec3 GRAVITY = glm::vec3( 0.0f, -2.0f, 0.0f );
 	const glm::vec3 GRAVITY = glm::vec3(0.0f, 0.0f, 0.0f);		//NO gravity (for now)
@@ -754,22 +765,22 @@ void PhysicsStep( double deltaTime )
 							float distanceX = 0.0f;
 							float distanceZ = 0.0f;
 
-							if( pCurGO->position.x > g_vecPoints[i_point].x )
+							if( pCurGO->position.x > g_vecPoints[i_point].point.x )
 							{
-								distanceX = pCurGO->position.x - g_vecPoints[i_point].x;
+								distanceX = pCurGO->position.x - g_vecPoints[i_point].point.x;
 							}
 							else
 							{
-								distanceX = g_vecPoints[i_point].x - pCurGO->position.x;
+								distanceX = g_vecPoints[i_point].point.x - pCurGO->position.x;
 							}
 							
-							if( pCurGO->position.z > g_vecPoints[i_point].z )
+							if( pCurGO->position.z > g_vecPoints[i_point].point.z )
 							{
-								distanceZ = pCurGO->position.z - g_vecPoints[i_point].z;
+								distanceZ = pCurGO->position.z - g_vecPoints[i_point].point.z;
 							}
 							else
 							{
-								distanceZ = g_vecPoints[i_point].z - pCurGO->position.z;
+								distanceZ = g_vecPoints[i_point].point.z - pCurGO->position.z;
 							}
 
 							if ( ( pCurGO->radius > distanceX ) && ( pCurGO->radius > distanceZ ) )
@@ -777,10 +788,13 @@ void PhysicsStep( double deltaTime )
 								
 
 								std::cout << "Collision has occur between: Object " << index << " and Point " << i_point << std::endl;
-								std::cout << "Initial Velocity X: " << pCurGO->vel.x << std::endl << " / Z: " << pCurGO->vel.z << " / Y: " << pCurGO->vel.y << std::endl;
+								std::cout << "Initial Velocity X: " << pCurGO->vel.x << " / Z: " << pCurGO->vel.z << " / Y: " << pCurGO->vel.y << std::endl;
 
-								bounceSphereAgainstPlane( pCurGO, pOtherObject );
-								std::cout << "Final Velocity X: " << pCurGO->vel.x << std::endl << " / Z: " << pCurGO->vel.z << " / Y: " << pCurGO->vel.y << std::endl;
+								triangleNormal = returnNormal( g_vecPoints[i_point].triangle.vertex );
+
+								bounceSphereAgainstPlane( pCurGO, pOtherObject, triangleNormal );
+								std::cout << "Final Velocity X: " << pCurGO->vel.x << " / Z: " << pCurGO->vel.z << " / Y: " << pCurGO->vel.y << std::endl;
+
 
 								break;
 							}
@@ -1021,4 +1035,21 @@ void DrawObject( cGameObject* pTheGO )
 	glBindVertexArray( 0 );
 
 	return;
+}
+
+glm::vec3 returnNormal( glm::vec3 vertex[3] ){
+	glm::vec3 vertA = vertex[0];
+	glm::vec3 vertB = vertex[1];
+	glm::vec3 vertC = vertex[2];
+	
+	glm::vec3 theNormal = glm::vec3( 0.0f );
+
+	glm::vec3 vectorU = ( vertB - vertA );
+	glm::vec3 vectorV = ( vertC - vertA );
+
+	theNormal.x = ( vectorU.y * vectorV.z ) - ( vectorU.z * vectorV.y );
+	theNormal.y = ( vectorU.z * vectorV.x ) - ( vectorU.x * vectorV.z );
+	theNormal.z = ( vectorU.x * vectorV.y ) - ( vectorU.y * vectorV.x );
+
+	return theNormal;
 }

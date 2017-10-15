@@ -138,7 +138,7 @@ bool AlmostEqualRelativeAndAbs( float A, float B ) {
 
 //void bounceSpheres( cGameObject* pA, cGameObject* pB )
 //void ApplyImpulse( RigidbodyVolume& A, RigidbodyVolume& B, const CollisionManifold& M, int c ) {
-void bounceSphereAgainstPlane( cGameObject* pA, cGameObject* pB )
+void bounceSphereAgainstPlane( cGameObject* pA, cGameObject* pB, glm::vec3 tNormal )
 {
 	// Linear impulse
 	float invMassSum = pA->inverseMass + pB->inverseMass;
@@ -157,18 +157,27 @@ void bounceSphereAgainstPlane( cGameObject* pA, cGameObject* pB )
 	glm::vec3 relativeVel = pB->vel - pA->vel;
 
 	// Relative collision normal
-	glm::vec3 relativeNorm = glm::vec3( 0.0f, 0.0f, -1.0f ); // = M.normal;
-	glm::normalize( relativeNorm );
+	//glm::vec3 relativeNorm = glm::vec3( 0.0f, 0.0f, 1.0f ); // = M.normal;
+
+	if( tNormal.x > 1.0f ) tNormal.x = -1.0f;
+	if( tNormal.y > 1.0f ) tNormal.y = -1.0f;
+	if( tNormal.z > 1.0f ) tNormal.z = -1.0f;
+	
+	if( tNormal.x < -1.0f ) tNormal.x = 1.0f;
+	if( tNormal.y < -1.0f ) tNormal.y = 1.0f;
+	if( tNormal.z < -1.0f ) tNormal.z = 1.0f;
+
+	glm::normalize( tNormal );
 
 	// Moving away from each other? Do nothing!
-	if( glm::dot( relativeVel, relativeNorm ) > 0.0f ) {
+	if( glm::dot( relativeVel, tNormal ) > 0.0f ) {
 		return;
 	}
 
 	//float e = fminf( A.cor, B.cor );
 	float e = fminf( 1.0f , 1.0f ); // Perfect ellastic collision have COR = 1.0
 
-	float numerator = ( -( 1.0f + e ) * glm::dot( relativeVel, relativeNorm ) );
+	float numerator = ( -( 1.0f + e ) * glm::dot( relativeVel, tNormal ) );
 	float d1 = invMassSum;
 
 	//glm::vec3 d2 = Cross( MultiplyVector( glm::cross( r1, relativeNorm ), i1 ), r1 );
@@ -181,7 +190,7 @@ void bounceSphereAgainstPlane( cGameObject* pA, cGameObject* pB )
 	//	j /= ( float ) M.contacts.size();
 	//}
 
-	glm::vec3 impulse = relativeNorm * j;
+	glm::vec3 impulse = tNormal * j;
 	pA->vel = pA->vel - impulse *  pA->inverseMass;
 	pB->vel = pB->vel + impulse *  pB->inverseMass;
 	
@@ -193,7 +202,7 @@ void bounceSphereAgainstPlane( cGameObject* pA, cGameObject* pB )
 	//B.angVel = B.angVel + MultiplyVector( Cross( r2, impulse ), i2 );
 
 	// Friction
-	glm::vec3 t = relativeVel - ( relativeNorm * glm::dot( relativeVel, relativeNorm ) );
+	glm::vec3 t = relativeVel - ( tNormal * glm::dot( relativeVel, tNormal ) );
 	if( AlmostEqualRelativeAndAbs( glm::dot( t, t ), 0.0f ) ) {
 		
 		return;
@@ -242,6 +251,10 @@ void bounceSphereAgainstPlane( cGameObject* pA, cGameObject* pB )
 	pA->vel = pA->vel - tangentImpuse *  pA->inverseMass;	
 	// THIS SHOULD BE ZERO FOR STATIC OBJECTS (INFINITY MASS):
 	pB->vel = pB->vel + tangentImpuse *  pB->inverseMass;
+
+	// HACK Y velocity must be 0 for now
+	pA->vel.y = 0.0f;
+	pB->vel.y = 0.0f;
 
 	//A.angVel = A.angVel - MultiplyVector( Cross( r1, tangentImpuse ), i1 );
 	//B.angVel = B.angVel + MultiplyVector( Cross( r2, tangentImpuse ), i2 );
