@@ -406,26 +406,30 @@ int main( void )
 	::g_pLightManager->vecLights[0].diffuse = glm::vec3(1.0f, 1.0f, 1.0f);
 
 	//set the light specular to white
-	::g_pLightManager->vecLights[0].specular = glm::vec4(1.0f, 1.0f, 1.0f, 1.0f);
+	//::g_pLightManager->vecLights[0].specular = glm::vec4(1.0f, 1.0f, 1.0f, 1.0f);
 
 	//set the light ambient to black
-	::g_pLightManager->vecLights[0].ambient = glm::vec3( 0.0, 0.0, 0.0 );
+	//::g_pLightManager->vecLights[0].ambient = glm::vec3( 0.0, 0.0, 0.0 );
 	
 
 	// ADD 4 MORE LIGHTS========================================
 	// One at each "corner"
 	{
 
-		::g_pLightManager->vecLights[1].position = glm::vec3( -30.0f, 20.0f, 18.0f );
+		::g_pLightManager->vecLights[1].position = glm::vec3( -30.0f, -10.0f, 18.0f );
 		::g_pLightManager->vecLights[1].diffuse = glm::vec3( 1.0f, 1.0f, 1.0f );
-
-		::g_pLightManager->vecLights[2].position = glm::vec3( -30.0f, 20.0f, -18.0f );
+		::g_pLightManager->vecLights[1].attenuation.y = 0.06f;
+		
+		::g_pLightManager->vecLights[2].position = glm::vec3( -30.0f, -10.0f, -18.0f );
 		::g_pLightManager->vecLights[2].diffuse = glm::vec3( 1.0f, 1.0f, 1.0f );
+		::g_pLightManager->vecLights[2].attenuation.y = 0.0222676f;
+		::g_pLightManager->vecLights[2].attenuation.z = 0.0f;
 
-		::g_pLightManager->vecLights[3].position = glm::vec3( 30.0f, 20.0f, 18.0f );
+
+		::g_pLightManager->vecLights[3].position = glm::vec3( 30.0f, -10.0f, 18.0f );
 		::g_pLightManager->vecLights[3].diffuse = glm::vec3( 1.0f, 1.0f, 1.0f );
 
-		::g_pLightManager->vecLights[4].position = glm::vec3( 30.0f, 20.0f, -18.0f );
+		::g_pLightManager->vecLights[4].position = glm::vec3( 30.0f, -10.0f, -18.0f );
 		::g_pLightManager->vecLights[4].diffuse = glm::vec3( 1.0f, 1.0f, 1.0f );
 
 	}
@@ -633,7 +637,7 @@ void DrawClosestPointsOnTable( glm::vec3 thePoint )
 
 		::g_vecPoints.push_back( theClosestPoint );
 
-		DrawDebugSphere( theClosestPoint.point, glm::vec4( 1, 1, 1, 1 ), 0.2f );
+		//DrawDebugSphere( theClosestPoint.point, glm::vec4( 1, 1, 1, 1 ), 0.2f );
 	}
 
 		//collisionThingy:
@@ -791,6 +795,10 @@ void PhysicsStep( double deltaTime )
 								std::cout << "Initial Velocity X: " << pCurGO->vel.x << " / Z: " << pCurGO->vel.z << " / Y: " << pCurGO->vel.y << std::endl;
 
 								triangleNormal = returnNormal( g_vecPoints[i_point].triangle.vertex );
+
+								// Return sphere to previous position before the impact
+								if( pCurGO->prevPosition != glm::vec3( NULL ) )
+									pCurGO->position = pCurGO->prevPosition;
 
 								bounceSphereAgainstPlane( pCurGO, pOtherObject, triangleNormal );
 								std::cout << "Final Velocity X: " << pCurGO->vel.x << " / Z: " << pCurGO->vel.z << " / Y: " << pCurGO->vel.y << std::endl;

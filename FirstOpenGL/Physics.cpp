@@ -226,7 +226,7 @@ void bounceSphereAgainstPlane( cGameObject* pA, cGameObject* pB, glm::vec3 tNorm
 		return;
 	}
 
-	glm::vec3 tangentImpuse;
+	glm::vec3 tangentImpuse = glm::vec3( 0.0f );
 //#ifdef DYNAMIC_FRICTION
 //	float sf = sqrtf( A.staticFriction * B.staticFriction );
 //	float df = sqrtf( A.dynamicFriction * B.dynamicFriction );
