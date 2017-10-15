@@ -48,6 +48,8 @@ bool g_isThereMovement = false;
 // Remember to #include <vector>...
 std::vector< cGameObject* > g_vecGameObjects;
 
+std::vector< glm::vec3 > g_vecPoints;
+
 cGameObject* g_pTheDebugSphere;
 cGameObject* g_pTheCueGO;
 
@@ -604,11 +606,12 @@ void loadLightObjects()
 	}
 }
 
-
 void DrawClosestPointsOnTable( glm::vec3 thePoint )
 {
-	// std::vector< cPhysTriangle > vecPhysTris;
 	int numberOfTriangles = ::g_MeshPoolTable.vecPhysTris.size();
+
+	//std::fill( g_vecPoints.begin(), g_vecPoints.end(), glm::vec3( NULL ) );
+	g_vecPoints.clear();
 
 	for( int triIndex = 0; triIndex != numberOfTriangles; triIndex++ )
 	{
@@ -618,7 +621,10 @@ void DrawClosestPointsOnTable( glm::vec3 thePoint )
 
 		glm::vec3 theClosestPoint = curTriangle.ClosestPtPointTriangle( thePoint );
 
-		DrawDebugSphere( theClosestPoint, glm::vec4( 1, 1, 1, 1 ), 0.5f );
+		::g_vecPoints.push_back( theClosestPoint );
+
+		DrawDebugSphere( theClosestPoint, glm::vec4( 1, 1, 1, 1 ), 0.2f );
+	}
 
 		//collisionThingy:
 		//	- Which objects collided (sphere - triangle/sphere - sphere)
@@ -628,7 +634,6 @@ void DrawClosestPointsOnTable( glm::vec3 thePoint )
 		//	vecMyColisions.push_Back( collisionThingy );
 		// Calc response...
 		//		glm::reflect( 
-	}
 
 	return;
 }
@@ -644,26 +649,9 @@ void PhysicsStep( double deltaTime )
 	// Distance = time * velocity
 	// velocity = time * acceleration
 
-	// Use the white ball location 
+	//// Use the white ball location to draw the closest points in the table
 	//glm::vec3 thePointToTest = ::g_vecGameObjects[2]->position;
 	//DrawClosestPointsOnTable( thePointToTest );
-
-	{
-		glm::vec3 thePointToTest = ::g_vecGameObjects[2]->position;
-
-		int numberOfTriangles = ::g_MeshPoolTable.vecPhysTris.size();
-
-		for( int triIndex = 0; triIndex != numberOfTriangles; triIndex++ )
-		{
-			// Get reference object for current triangle
-			// (so the line below isn't huge long...)
-			cPhysTriangle& curTriangle = ::g_MeshPoolTable.vecPhysTris[triIndex];
-
-			glm::vec3 theClosestPoint = curTriangle.ClosestPtPointTriangle( thePointToTest );
-
-			DrawDebugSphere( theClosestPoint, glm::vec4( 1, 1, 1, 1 ), 0.2f );
-		}
-	}
 
 
 	//const glm::vec3 GRAVITY = glm::vec3( 0.0f, -2.0f, 0.0f );
@@ -682,6 +670,11 @@ void PhysicsStep( double deltaTime )
 		}
 
 		cGameObject* pCurGO = ::g_vecGameObjects[index];
+
+		// Use the Object's (ball) location to draw the closest points in the table
+		// Stores the closests points in a Vector to be used bellow
+		glm::vec3 thePointToTest = pCurGO->position;
+		DrawClosestPointsOnTable( thePointToTest );
 
 		// Is this object to be updated?
 		if ( !pCurGO->bIsUpdatedInPhysics )
@@ -742,9 +735,59 @@ void PhysicsStep( double deltaTime )
 					break;
 
 				// TODO - IMPLEMENT THIS ASAP
-				//case eTypeOfObject::PLANE:
-				////    CalcSpherePlaneColision( pCurGO, pGO_to_Compare );
-				//	break;
+				case eTypeOfObject::PLANE:
+				//    CalcSpherePlaneColision( pCurGO, pOtherObject );
+					
+					// HACK TO CHECK ONLY AGAINST THE TABLE SIDES OBJECT
+					if( pOtherObject->physicsMeshName == "physics_poolsides" )
+					{ // It's the sides, this code is just for now
+						for( int i_point = 0; i_point != ::g_vecPoints.size(); i_point++ )
+						{	// Check if any point is in contact with the pCurGO
+
+							// The Pythagorean distance 
+							
+							// TODO Implement the collision with Y axis as well, this would be the logic
+							//float distance = glm::distance( pCurGO->position, ::g_vecPoints[i_point] );
+							//if( distance <= pCurGO->radius )
+							
+							// RIGHT NOW we're only testing X and Z
+							float distanceX = 0.0f;
+							float distanceZ = 0.0f;
+
+							if( pCurGO->position.x > g_vecPoints[i_point].x )
+							{
+								distanceX = pCurGO->position.x - g_vecPoints[i_point].x;
+							}
+							else
+							{
+								distanceX = g_vecPoints[i_point].x - pCurGO->position.x;
+							}
+							
+							if( pCurGO->position.z > g_vecPoints[i_point].z )
+							{
+								distanceZ = pCurGO->position.z - g_vecPoints[i_point].z;
+							}
+							else
+							{
+								distanceZ = g_vecPoints[i_point].z - pCurGO->position.z;
+							}
+
+							if ( ( pCurGO->radius > distanceX ) && ( pCurGO->radius > distanceZ ) )
+							{	// COLLISION!!
+								std::cout << "Distance X: " << distanceX << std::endl << " / distance Z: " << distanceZ << " / radius: " << pCurGO->radius << std::endl;
+
+								std::cout << "Collision has occur between:" << std::endl <<
+									"Object " << index << " position: " <<
+									pCurGO->position.x << " / " << pCurGO->position.y << " / " << pCurGO->position.z << std::endl
+									<< "Point " << i_point << " position: " <<
+									::g_vecPoints[i_point].x << " / " << ::g_vecPoints[i_point].y << " / " << ::g_vecPoints[i_point].z << std::endl;
+
+								break;
+							}
+						}
+					}
+
+					break;
 				}
 			}
 
@@ -793,6 +836,7 @@ void PhysicsStep( double deltaTime )
 			{	// Object has "hit" the ground 
 				pCurGO->vel.y = +( fabs( pCurGO->vel.y ) );
 			}
+
 			if ( ( pCurGO->position.x + pCurGO->radius ) >= RIGHTSIDEWALL )
 			{	// Object too far to the right
 				// Object has penetrated the right plane
