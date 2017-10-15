@@ -88,7 +88,16 @@ bool LoadModelsIntoScene(std::string &error)
 
 		// ADD mass
 		pTempGO->mass = allObjects[index].mass;
-		pTempGO->inverseMass -= allObjects[index].mass;
+
+		// ADD inverse mass
+		if( allObjects[index].mass == 0.0f )
+		{
+			pTempGO->inverseMass = 0.0f;
+		}
+		else
+		{
+			pTempGO->inverseMass = 1.0 / allObjects[index].mass;
+		}
 
 		// ADD velocity and acceleration
 		if (!pTempGO->bIsLight)
