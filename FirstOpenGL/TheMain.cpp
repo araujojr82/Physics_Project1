@@ -123,8 +123,8 @@ static void key_callback( GLFWwindow* window, int key, int scancode, int action,
 	// TODO change this to be controlled by user
 	if( key == GLFW_KEY_SPACE && action == GLFW_PRESS )
 	{
-		::g_vecGameObjects[2]->vel.x = generateRandomNumber( 6.0f, 12.0f );
-		::g_vecGameObjects[2]->vel.z = generateRandomNumber( 6.0f, 12.0f );
+		::g_vecGameObjects[2]->vel.x = generateRandomNumber( 16.0f, 22.0f );
+		//::g_vecGameObjects[2]->vel.z = generateRandomNumber( 6.0f, 12.0f );
 	}
 
 	// Change "target" selected game object
@@ -774,13 +774,13 @@ void PhysicsStep( double deltaTime )
 
 							if ( ( pCurGO->radius > distanceX ) && ( pCurGO->radius > distanceZ ) )
 							{	// COLLISION!!
-								std::cout << "Distance X: " << distanceX << std::endl << " / distance Z: " << distanceZ << " / radius: " << pCurGO->radius << std::endl;
+								
 
-								std::cout << "Collision has occur between:" << std::endl <<
-									"Object " << index << " position: " <<
-									pCurGO->position.x << " / " << pCurGO->position.y << " / " << pCurGO->position.z << std::endl
-									<< "Point " << i_point << " position: " <<
-									::g_vecPoints[i_point].x << " / " << ::g_vecPoints[i_point].y << " / " << ::g_vecPoints[i_point].z << std::endl;
+								std::cout << "Collision has occur between: Object " << index << " and Point " << i_point << std::endl;
+								std::cout << "Initial Velocity X: " << pCurGO->vel.x << std::endl << " / Z: " << pCurGO->vel.z << " / Y: " << pCurGO->vel.y << std::endl;
+
+								bounceSphereAgainstPlane( pCurGO, pOtherObject );
+								std::cout << "Final Velocity X: " << pCurGO->vel.x << std::endl << " / Z: " << pCurGO->vel.z << " / Y: " << pCurGO->vel.y << std::endl;
 
 								break;
 							}
@@ -837,26 +837,26 @@ void PhysicsStep( double deltaTime )
 				pCurGO->vel.y = +( fabs( pCurGO->vel.y ) );
 			}
 
-			if ( ( pCurGO->position.x + pCurGO->radius ) >= RIGHTSIDEWALL )
-			{	// Object too far to the right
-				// Object has penetrated the right plane
-				pCurGO->vel.x = -( fabs( pCurGO->vel.x ) );
-			}
-			if ( ( pCurGO->position.x - pCurGO->radius ) <= LEFTSIDEWALL )
-			{	// Object too far to the left
-				// Object has penetrated the left plane
-				pCurGO->vel.x = +( fabs( pCurGO->vel.x ) );
-			}
-			if ((pCurGO->position.z - pCurGO->radius) <= BACKSIDEWALL)
-			{	// Object too far to the back
-				// Object has penetrated the back plane
-				pCurGO->vel.z = +(fabs(pCurGO->vel.z));
-			}
-			if( ( pCurGO->position.z + pCurGO->radius ) >= FRONTSIDEWALL )
-			{	// Object too far to the front
-				// Object has penetrated the front plane
-				pCurGO->vel.z = -( fabs( pCurGO->vel.z ) );
-			}
+			//if ( ( pCurGO->position.x + pCurGO->radius ) >= RIGHTSIDEWALL )
+			//{	// Object too far to the right
+			//	// Object has penetrated the right plane
+			//	pCurGO->vel.x = -( fabs( pCurGO->vel.x ) );
+			//}
+			//if ( ( pCurGO->position.x - pCurGO->radius ) <= LEFTSIDEWALL )
+			//{	// Object too far to the left
+			//	// Object has penetrated the left plane
+			//	pCurGO->vel.x = +( fabs( pCurGO->vel.x ) );
+			//}
+			//if ((pCurGO->position.z - pCurGO->radius) <= BACKSIDEWALL)
+			//{	// Object too far to the back
+			//	// Object has penetrated the back plane
+			//	pCurGO->vel.z = +(fabs(pCurGO->vel.z));
+			//}
+			//if( ( pCurGO->position.z + pCurGO->radius ) >= FRONTSIDEWALL )
+			//{	// Object too far to the front
+			//	// Object has penetrated the front plane
+			//	pCurGO->vel.z = -( fabs( pCurGO->vel.z ) );
+			//}
 			break;
 		};
 	}//for ( int index...
