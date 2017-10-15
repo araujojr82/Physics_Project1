@@ -104,7 +104,7 @@ float generateRandomNumber( float min, float max );
 
 void DrawObject( cGameObject* pTheGO );
 void DrawDebugSphere( glm::vec3 location, glm::vec4 colour, float scale );
-void DrawClosestPointsOnTable( glm::vec3 thePoint );
+void findClosestPointsOnTable( glm::vec3 thePoint );
 
 glm::vec3 returnNormal( glm::vec3 vertex[3] );
 
@@ -618,7 +618,7 @@ void loadLightObjects()
 	}
 }
 
-void DrawClosestPointsOnTable( glm::vec3 thePoint )
+void findClosestPointsOnTable( glm::vec3 thePoint )
 {
 	int numberOfTriangles = ::g_MeshPoolTable.vecPhysTris.size();
 
@@ -667,6 +667,13 @@ void PhysicsStep( double deltaTime )
 	//glm::vec3 thePointToTest = ::g_vecGameObjects[2]->position;
 	//DrawClosestPointsOnTable( thePointToTest );
 
+	// Boundaries
+	const float SURFACEOFGROUND = 0.0f;
+	const float RIGHTSIDEWALL = 18.0f;
+	const float LEFTSIDEWALL = -18.0f;
+	const float BACKSIDEWALL = -9.0f;
+	const float FRONTSIDEWALL = 9.0f;
+
 	glm::vec3 triangleNormal = glm::vec3( 0.0f );
 
 	//const glm::vec3 GRAVITY = glm::vec3( 0.0f, -2.0f, 0.0f );
@@ -686,22 +693,39 @@ void PhysicsStep( double deltaTime )
 
 		cGameObject* pCurGO = ::g_vecGameObjects[index];
 
-		// Use the Object's (ball) location to draw the closest points in the table
 		// Stores the closests points in a Vector to be used bellow
 		glm::vec3 thePointToTest = pCurGO->position;
-		DrawClosestPointsOnTable( thePointToTest );
+		findClosestPointsOnTable( thePointToTest );
 
 		// Is this object to be updated?
 		if ( !pCurGO->bIsUpdatedInPhysics )
 		{	// DON'T update this
 			continue;		// Skip everything else in the for
 		}
+
+		glm::vec3 olderPosition = pCurGO->prevPosition;
+
 		pCurGO->prevPosition = pCurGO->position;
 
 		// Explicity Euler integration (RK4)
 		// New position is based on velocity over time
 		glm::vec3 deltaPosition = ( float )deltaTime * pCurGO->vel;
-		pCurGO->position += deltaPosition;
+		//pCurGO->position += deltaPosition;
+
+		//Check future position to see if it's beyond the borders of the table
+		glm::vec3 futurePosition = pCurGO->position += deltaPosition;
+		if( futurePosition.x - pCurGO->radius > RIGHTSIDEWALL ||
+			futurePosition.x + pCurGO->radius < LEFTSIDEWALL ||
+			futurePosition.z - pCurGO->radius > FRONTSIDEWALL ||
+			futurePosition.z + pCurGO->radius < BACKSIDEWALL )
+		{ // The possition is beyond the borders of the table
+		  // Go back to Older position (previous frame)
+			pCurGO->position = olderPosition;
+		}
+		else
+		{	// Move as normal
+			pCurGO->position += deltaPosition;
+		}
 
 		// New velocity is based on acceleration over time
 		glm::vec3 deltaVelocity = ( ( float )deltaTime * pCurGO->accel )
@@ -749,19 +773,16 @@ void PhysicsStep( double deltaTime )
 
 					break;
 
-				// TODO - IMPLEMENT THIS ASAP
 				case eTypeOfObject::PLANE:
-				//    CalcSpherePlaneColision( pCurGO, pOtherObject );
 					
 					// HACK TO CHECK ONLY AGAINST THE TABLE SIDES OBJECT
 					if( pOtherObject->physicsMeshName == "physics_poolsides" )
-					{ // It's the sides, this code is just for now
+					{ // It's the sides
 						for( int i_point = 0; i_point != ::g_vecPoints.size(); i_point++ )
 						{	// Check if any point is in contact with the pCurGO
 
-							// The Pythagorean distance 
-							
 							// TODO Implement the collision with Y axis as well, this would be the logic
+							// The Pythagorean distance 
 							//float distance = glm::distance( pCurGO->position, ::g_vecPoints[i_point] );
 							//if( distance <= pCurGO->radius )
 							
@@ -787,12 +808,10 @@ void PhysicsStep( double deltaTime )
 								distanceZ = g_vecPoints[i_point].point.z - pCurGO->position.z;
 							}
 
-							if ( ( pCurGO->radius > distanceX ) && ( pCurGO->radius > distanceZ ) )
-							{	// COLLISION!!
-								
+							float tempRadius = pCurGO->radius; // *1.2;
 
-								std::cout << "Collision has occur between: Object " << index << " and Point " << i_point << std::endl;
-								std::cout << "Initial Velocity X: " << pCurGO->vel.x << " / Z: " << pCurGO->vel.z << " / Y: " << pCurGO->vel.y << std::endl;
+							if ( ( tempRadius >= distanceX ) && ( tempRadius >= distanceZ ) )
+							{	// COLLISION!!
 
 								triangleNormal = returnNormal( g_vecPoints[i_point].triangle.vertex );
 
@@ -800,9 +819,25 @@ void PhysicsStep( double deltaTime )
 								if( pCurGO->prevPosition != glm::vec3( NULL ) )
 									pCurGO->position = pCurGO->prevPosition;
 
-								bounceSphereAgainstPlane( pCurGO, pOtherObject, triangleNormal );
-								std::cout << "Final Velocity X: " << pCurGO->vel.x << " / Z: " << pCurGO->vel.z << " / Y: " << pCurGO->vel.y << std::endl;
+								glm::vec3 initialPosition = pCurGO->position;
+								glm::vec3 initialVelocity = pCurGO->vel;
 
+								bounceSphereAgainstPlane( pCurGO, pOtherObject, triangleNormal );
+
+								//if( pCurGO->position.x - pCurGO->radius > RIGHTSIDEWALL ||
+								//	pCurGO->position.x + pCurGO->radius < LEFTSIDEWALL ||
+								//	pCurGO->position.z - pCurGO->radius > FRONTSIDEWALL ||
+								//	pCurGO->position.z + pCurGO->radius < BACKSIDEWALL )
+								//{
+								//	glm::vec3 deltaPosition = ( float ) deltaTime * initialVelocity;
+								//	pCurGO->position -= deltaPosition;
+
+								//	std::cout << "Weird collision has occur between: Object " << index << " and Point " << i_point << std::endl;
+								//	std::cout << "Initial Position X: " << initialPosition.x << " / Z: " << initialPosition.z << " / Y: " << initialPosition.y << std::endl;
+								//	std::cout << "Final Position X  : " << pCurGO->position.x << " / Z: " << pCurGO->position.z << " / Y: " << pCurGO->position.y << std::endl;
+								//	std::cout << "Initial Velocity X: " << initialVelocity.x << " / Z: " << initialVelocity.z << " / Y: " << initialVelocity.y << std::endl;
+								//	std::cout << "Final Velocity X  : " << pCurGO->vel.x << " / Z: " << pCurGO->vel.z << " / Y: " << pCurGO->vel.y << std::endl;
+								//}
 
 								break;
 							}
