@@ -31,15 +31,51 @@
 #include <random>
 #include <chrono>
 
+#define _USE_MATH_DEFINES
+#include <math.h>
+
 // Euclides: Control selected object for movement
 int g_GameObjNumber = 0;				// game object vector position number 
 int g_LightObjNumber = 0;				// light object vector position
 
+int angle = 0;
+float speed = 12.0f;
+
+float increaseAngle( float angle )
+{
+	if( angle < 360 ) angle += 1; // 0.0027777777777778f;
+	else angle = 0;
+
+	return angle;
+
+}
+float decreaseAngle( float angle )
+{
+	if( angle > 0 ) angle -= 1; // 0.0027777777777778f;
+	else angle = 360;
+	return angle;
+}
+float increaseSpeed( float speed )
+{
+	if( speed < 12.0f ) speed += 1.0f;
+	else speed = 12.0f;
+
+	if( speed > 12.0f ) speed = 12.0f;
+	return speed;
+}
+float decreaseSpeed( float speed )
+{
+	if( speed > 1.0f ) speed -= 1.0f;
+	else speed = 1.0f;
+
+	if( speed < 1.0f ) speed = 1.0f;
+	return speed;
+}
 
 cMesh g_MeshPoolTable;
 
 //glm::vec3 CAMERASPEED = glm::vec3( 0.0f, 0.0f, 0.0f );
-static const int g_NUMBER_OF_LIGHTS = 5;
+static const int g_NUMBER_OF_LIGHTS = 1;
 static const float g_FRICTION_FORCE = 0.01f;
 
 bool bIsWireframe = false;
@@ -131,8 +167,20 @@ static void key_callback( GLFWwindow* window, int key, int scancode, int action,
 	// TODO change this to be controlled by user
 	if( key == GLFW_KEY_SPACE && action == GLFW_PRESS )
 	{
-		::g_vecGameObjects[2]->vel.x = generateRandomNumber( 6.0f, 12.0f );
+		//::g_vecGameObjects[2]->vel.x = generateRandomNumber( 6.0f, 12.0f );
 		//::g_vecGameObjects[2]->vel.z = generateRandomNumber( 6.0f, 12.0f );
+
+		float speedX, speedZ;
+
+		//speedX = speed * sin( angle ); 
+		//speedZ = speed * cos( angle );
+
+		speedX = speed * cos( ( angle / 180 )* M_PI ); 
+		speedZ = speed * sin( ( angle / 180 )* M_PI );
+
+		::g_vecGameObjects[2]->vel.x = speedX;
+		::g_vecGameObjects[2]->vel.z = speedZ;
+
 	}
 
 	// Change "target" selected game object
@@ -187,53 +235,36 @@ static void key_callback( GLFWwindow* window, int key, int scancode, int action,
 	switch( key )
 	{
 	case GLFW_KEY_UP:		// Up arrow
-		::g_vecGameObjects[g_GameObjNumber]->position.y += 0.10f;
-		std::cout << "Object " << g_GameObjNumber << " position: " <<
-			::g_vecGameObjects[g_GameObjNumber]->position.x << " / " <<
-			::g_vecGameObjects[g_GameObjNumber]->position.y << " / " <<
-			::g_vecGameObjects[g_GameObjNumber]->position.z << std::endl;
-		//::g_pLightManager->vecLights[g_LightObjNumber].position.y += 0.10f;
+		speed = decreaseSpeed( speed );
+		std::cout << "Speed : " << speed << std::endl;
 		break;
 	case GLFW_KEY_DOWN:		// Down arrow
-		::g_vecGameObjects[g_GameObjNumber]->position.y -= 0.10f;
-		std::cout << "Object " << g_GameObjNumber << " position: " <<
-			::g_vecGameObjects[g_GameObjNumber]->position.x << " / " <<
-			::g_vecGameObjects[g_GameObjNumber]->position.y << " / " <<
-			::g_vecGameObjects[g_GameObjNumber]->position.z << std::endl;
-		//::g_pLightManager->vecLights[g_LightObjNumber].position.y -= 0.10f;
+		speed = increaseSpeed( speed );
+		std::cout << "Speed : " << speed << std::endl;
 		break;
 	case GLFW_KEY_LEFT:		// Left arrow
-		::g_vecGameObjects[g_GameObjNumber]->position.x -= 0.10f;
-		std::cout << "Object " << g_GameObjNumber << " position: " <<
-			::g_vecGameObjects[g_GameObjNumber]->position.x << " / " <<
-			::g_vecGameObjects[g_GameObjNumber]->position.y << " / " <<
-			::g_vecGameObjects[g_GameObjNumber]->position.z << std::endl;
-		//::g_pLightManager->vecLights[g_LightObjNumber].position.x -= 0.10f;
+		angle = increaseAngle( angle );
+		std::cout << "Angle : " << angle << std::endl;
+
+		if( g_pTheCueGO != NULL )
+		{
+			g_pTheCueGO->orientation2.y = glm::radians( (float)angle );
+		}
 		break;
 	case GLFW_KEY_RIGHT:	// Right arrow
-		::g_vecGameObjects[g_GameObjNumber]->position.x += 0.10f;
-		std::cout << "Object " << g_GameObjNumber << " position: " <<
-			::g_vecGameObjects[g_GameObjNumber]->position.x << " / " <<
-			::g_vecGameObjects[g_GameObjNumber]->position.y << " / " <<
-			::g_vecGameObjects[g_GameObjNumber]->position.z << std::endl;
-		//::g_pLightManager->vecLights[g_LightObjNumber].position.x += 0.10f;
+		angle = decreaseAngle( angle );
+		std::cout << "Angle : " << angle << std::endl;
+		if( g_pTheCueGO != NULL )
+		{
+			g_pTheCueGO->orientation2.y = glm::radians( ( float ) angle );
+		}
 		break;
-	case GLFW_KEY_LEFT_BRACKET:		// [{ key
-		::g_vecGameObjects[g_GameObjNumber]->position.z += 0.10f;
-		std::cout << "Object " << g_GameObjNumber << " position: " <<
-			::g_vecGameObjects[g_GameObjNumber]->position.x << " / " <<
-			::g_vecGameObjects[g_GameObjNumber]->position.y << " / " <<
-			::g_vecGameObjects[g_GameObjNumber]->position.z << std::endl;
-		//::g_pLightManager->vecLights[g_LightObjNumber].position.z += 0.10f;
-		break;
-	case GLFW_KEY_RIGHT_BRACKET:		// ]} key
-		::g_vecGameObjects[g_GameObjNumber]->position.z -= 0.10f;
-		std::cout << "Object " << g_GameObjNumber << " position: " <<
-			::g_vecGameObjects[g_GameObjNumber]->position.x << " / " <<
-			::g_vecGameObjects[g_GameObjNumber]->position.y << " / " <<
-			::g_vecGameObjects[g_GameObjNumber]->position.z << std::endl;
-		//::g_pLightManager->vecLights[g_LightObjNumber].position.z -= 0.10f;
-		break;
+	//case GLFW_KEY_LEFT_BRACKET:		// [{ key
+	//	::g_vecGameObjects[g_GameObjNumber]->position.z += 0.10f;
+	//	break;
+	//case GLFW_KEY_RIGHT_BRACKET:		// ]} key
+	//	::g_vecGameObjects[g_GameObjNumber]->position.z -= 0.10f;
+	//	break;
 	}
 
 	// Change Camera Position
@@ -286,20 +317,8 @@ static void key_callback( GLFWwindow* window, int key, int scancode, int action,
 int main( void )
 {
 	GLFWwindow* window;
-	//GLuint vertex_buffer, vertex_shader, fragment_shader, program;
-	GLint mvp_location; //vpos_location, vcol_location;
+	GLint mvp_location;
 	glfwSetErrorCallback( error_callback );
-
-	//// Other uniforms:
-	//GLint uniLoc_materialDiffuse = -1;
-	//GLint uniLoc_materialAmbient = -1;
-	//GLint uniLoc_ambientToDiffuseRatio = -1; 	// Maybe	// 0.2 or 0.3
-	//GLint uniLoc_materialSpecular = -1;  // rgb = colour of HIGHLIGHT only
-	//									 // w = shininess of the 
-	//GLint uniLoc_eyePosition = -1;	// Camera position
-	//GLint uniLoc_mModel = -1;
-	//GLint uniLoc_mView = -1;
-	//GLint uniLoc_mProjection = -1;
 
 	if( !glfwInit() )
 		exit( EXIT_FAILURE );
@@ -398,41 +417,30 @@ int main( void )
 
 	// Change ZERO light position "Main Top light"
 	::g_pLightManager->vecLights[0].position = glm::vec3(0.0f, 45.0f, 0.0f);
-	//::g_pLightManager->vecLights[0].diffuse = glm::vec3( 1.0f, 1.0f, 1.0f );
-	//::g_pLightManager->vecLights[0].ambient = glm::vec3( 1.0f, 1.0f, 1.0f );
 	::g_pLightManager->vecLights[0].attenuation.y = 0.06f;		// Change the linear attenuation
-	
-	//set the diffuse light to white
 	::g_pLightManager->vecLights[0].diffuse = glm::vec3(1.0f, 1.0f, 1.0f);
-
-	//set the light specular to white
-	//::g_pLightManager->vecLights[0].specular = glm::vec4(1.0f, 1.0f, 1.0f, 1.0f);
-
-	//set the light ambient to black
-	//::g_pLightManager->vecLights[0].ambient = glm::vec3( 0.0, 0.0, 0.0 );
-	
 
 	// ADD 4 MORE LIGHTS========================================
 	// One at each "corner"
-	{
+	//{
 
-		::g_pLightManager->vecLights[1].position = glm::vec3( -30.0f, -10.0f, 18.0f );
-		::g_pLightManager->vecLights[1].diffuse = glm::vec3( 1.0f, 1.0f, 1.0f );
-		::g_pLightManager->vecLights[1].attenuation.y = 0.06f;
-		
-		::g_pLightManager->vecLights[2].position = glm::vec3( -30.0f, -10.0f, -18.0f );
-		::g_pLightManager->vecLights[2].diffuse = glm::vec3( 1.0f, 1.0f, 1.0f );
-		::g_pLightManager->vecLights[2].attenuation.y = 0.0222676f;
-		::g_pLightManager->vecLights[2].attenuation.z = 0.0f;
+	//	::g_pLightManager->vecLights[1].position = glm::vec3( -30.0f, 20.0f, 18.0f );
+	//	::g_pLightManager->vecLights[1].diffuse = glm::vec3( 1.0f, 1.0f, 1.0f );
+	//	::g_pLightManager->vecLights[1].attenuation.y = 0.06f;
+	//	
+	//	::g_pLightManager->vecLights[2].position = glm::vec3( -30.0f, 20.0f, -18.0f );
+	//	::g_pLightManager->vecLights[2].diffuse = glm::vec3( 1.0f, 1.0f, 1.0f );
+	//	::g_pLightManager->vecLights[2].attenuation.y = 0.0222676f;
+	//	::g_pLightManager->vecLights[2].attenuation.z = 0.0f;
 
 
-		::g_pLightManager->vecLights[3].position = glm::vec3( 30.0f, -10.0f, 18.0f );
-		::g_pLightManager->vecLights[3].diffuse = glm::vec3( 1.0f, 1.0f, 1.0f );
+	//	::g_pLightManager->vecLights[3].position = glm::vec3( 30.0f, 20.0f, 18.0f );
+	//	::g_pLightManager->vecLights[3].diffuse = glm::vec3( 1.0f, 1.0f, 1.0f );
 
-		::g_pLightManager->vecLights[4].position = glm::vec3( 30.0f, -10.0f, -18.0f );
-		::g_pLightManager->vecLights[4].diffuse = glm::vec3( 1.0f, 1.0f, 1.0f );
+	//	::g_pLightManager->vecLights[4].position = glm::vec3( 30.0f, 20.0f, -18.0f );
+	//	::g_pLightManager->vecLights[4].diffuse = glm::vec3( 1.0f, 1.0f, 1.0f );
 
-	}
+	//}
 	//=========================================================
 
 	loadLightObjects();
