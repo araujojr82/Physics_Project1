@@ -39,7 +39,7 @@ int g_GameObjNumber = 0;				// game object vector position number
 int g_LightObjNumber = 0;				// light object vector position
 
 int angle = 0;
-float speed = 12.0f;
+float speed = 7.0f;
 
 float increaseAngle( float angle )
 {
@@ -57,15 +57,15 @@ float decreaseAngle( float angle )
 }
 float increaseSpeed( float speed )
 {
-	if( speed < 12.0f ) speed += 1.0f;
-	else speed = 12.0f;
+	if( speed < 7.0f ) speed += 0.1f;
+	else speed = 7.0f;
 
-	if( speed > 12.0f ) speed = 12.0f;
+	if( speed > 7.0f ) speed = 7.0f;
 	return speed;
 }
 float decreaseSpeed( float speed )
 {
-	if( speed > 1.0f ) speed -= 1.0f;
+	if( speed > 1.0f ) speed -= 0.1f;
 	else speed = 1.0f;
 
 	if( speed < 1.0f ) speed = 1.0f;
@@ -163,21 +163,16 @@ static void key_callback( GLFWwindow* window, int key, int scancode, int action,
 		else bIsWireframe = true;
 	}
 
-	// "Shoot" the white ball (at random speed for now)
-	// TODO change this to be controlled by user
+	// "Shoot" the white ball
 	if( key == GLFW_KEY_SPACE && action == GLFW_PRESS )
 	{
-		//::g_vecGameObjects[2]->vel.x = generateRandomNumber( 6.0f, 12.0f );
-		//::g_vecGameObjects[2]->vel.z = generateRandomNumber( 6.0f, 12.0f );
+		float speedX, speedZ, shootAngle;
 
-		float speedX, speedZ;
+		shootAngle = angle;
 
-		//speedX = speed * sin( angle ); 
-		//speedZ = speed * cos( angle );
-
-		speedX = speed * cos( ( angle / 180 )* M_PI ); 
-		speedZ = speed * sin( ( angle / 180 )* M_PI );
-
+		speedX = speed * sin( ( shootAngle * M_PI ) / 180 );
+		speedZ = speed * cos( ( shootAngle * M_PI ) / 180 );
+		
 		::g_vecGameObjects[2]->vel.x = speedX;
 		::g_vecGameObjects[2]->vel.z = speedZ;
 
@@ -248,7 +243,7 @@ static void key_callback( GLFWwindow* window, int key, int scancode, int action,
 
 		if( g_pTheCueGO != NULL )
 		{
-			g_pTheCueGO->orientation2.y = glm::radians( (float)angle );
+			g_pTheCueGO->orientation2.y = glm::radians( (float) angle );
 		}
 		break;
 	case GLFW_KEY_RIGHT:	// Right arrow
@@ -259,12 +254,6 @@ static void key_callback( GLFWwindow* window, int key, int scancode, int action,
 			g_pTheCueGO->orientation2.y = glm::radians( ( float ) angle );
 		}
 		break;
-	//case GLFW_KEY_LEFT_BRACKET:		// [{ key
-	//	::g_vecGameObjects[g_GameObjNumber]->position.z += 0.10f;
-	//	break;
-	//case GLFW_KEY_RIGHT_BRACKET:		// ]} key
-	//	::g_vecGameObjects[g_GameObjNumber]->position.z -= 0.10f;
-	//	break;
 	}
 
 	// Change Camera Position
@@ -291,25 +280,25 @@ static void key_callback( GLFWwindow* window, int key, int scancode, int action,
 		break;
 	}
 	
-	// Change Selected Light
-	switch ( key )
-	{
-	case GLFW_KEY_1:
-		g_LightObjNumber = 0;
-		break;
-	case GLFW_KEY_2:
-		g_LightObjNumber = 1;
-		break;
-	case GLFW_KEY_3:
-		g_LightObjNumber = 2;
-		break;
-	case GLFW_KEY_4:
-		g_LightObjNumber = 3;
-		break;
-	case GLFW_KEY_5:
-		g_LightObjNumber = 4;
-		break;
-	}
+	//// Change Selected Light
+	//switch ( key )
+	//{
+	//case GLFW_KEY_1:
+	//	g_LightObjNumber = 0;
+	//	break;
+	//case GLFW_KEY_2:
+	//	g_LightObjNumber = 1;
+	//	break;
+	//case GLFW_KEY_3:
+	//	g_LightObjNumber = 2;
+	//	break;
+	//case GLFW_KEY_4:
+	//	g_LightObjNumber = 3;
+	//	break;
+	//case GLFW_KEY_5:
+	//	g_LightObjNumber = 4;
+	//	break;
+	//}
 
 	return;
 }
@@ -913,9 +902,11 @@ void PhysicsStep( double deltaTime )
 	// set the cue position the same as the white ball
 	if( g_pTheCueGO != NULL )
 	{
-		if( !g_isThereMovement )
-		{ // All balls are static, so we draw the cue next to the white ball
-		  // HACK, set position of cue depending on White ball position
+		//if( !g_isThereMovement )
+		//{ // All balls are static, so we draw the cue next to the white ball
+		//  // HACK, set position of cue depending on White ball position
+		if( g_vecGameObjects[2]->vel == glm::vec3( 0.0f ) )
+		{
 			g_pTheCueGO->position = ::g_vecGameObjects[2]->position;	// [2] ITS THE WHITE BALL! (Hardcoded, for now)
 		}
 		else
