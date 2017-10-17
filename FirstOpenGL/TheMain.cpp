@@ -774,7 +774,7 @@ void PhysicsStep( double deltaTime )
 				case eTypeOfObject::PLANE:
 					
 					// HACK TO CHECK ONLY AGAINST THE TABLE SIDES OBJECT
-					if( pOtherObject->physicsMeshName == "physics_poolsides" )
+					if( pOtherObject->physicsMeshName =	
 					{ // It's the sides
 						for( int i_point = 0; i_point != ::g_vecPoints.size(); i_point++ )
 						{	// Check if any point is in contact with the pCurGO
@@ -857,16 +857,6 @@ void PhysicsStep( double deltaTime )
 			{
 				pCurGO->vel.z -= g_FRICTION_FORCE;
 			}
-						
-
-			// HACK
-			const float SURFACEOFGROUND = 0.0f;
-			const float RIGHTSIDEWALL   = 18.0f;
-			const float LEFTSIDEWALL    = -18.0f;
-			const float BACKSIDEWALL    = -9.0f;
-			const float FRONTSIDEWALL   = 9.0f;
-			 
-			//Sphere-Plane detection
 
 			// HACK (Ground is table (game object 0)
 			if ( ( pCurGO->position.y - pCurGO->radius ) <= ::g_vecGameObjects[0]->position.z)
@@ -874,26 +864,6 @@ void PhysicsStep( double deltaTime )
 				pCurGO->vel.y = +( fabs( pCurGO->vel.y ) );
 			}
 
-			//if ( ( pCurGO->position.x + pCurGO->radius ) >= RIGHTSIDEWALL )
-			//{	// Object too far to the right
-			//	// Object has penetrated the right plane
-			//	pCurGO->vel.x = -( fabs( pCurGO->vel.x ) );
-			//}
-			//if ( ( pCurGO->position.x - pCurGO->radius ) <= LEFTSIDEWALL )
-			//{	// Object too far to the left
-			//	// Object has penetrated the left plane
-			//	pCurGO->vel.x = +( fabs( pCurGO->vel.x ) );
-			//}
-			//if ((pCurGO->position.z - pCurGO->radius) <= BACKSIDEWALL)
-			//{	// Object too far to the back
-			//	// Object has penetrated the back plane
-			//	pCurGO->vel.z = +(fabs(pCurGO->vel.z));
-			//}
-			//if( ( pCurGO->position.z + pCurGO->radius ) >= FRONTSIDEWALL )
-			//{	// Object too far to the front
-			//	// Object has penetrated the front plane
-			//	pCurGO->vel.z = -( fabs( pCurGO->vel.z ) );
-			//}
 			break;
 		};
 	}//for ( int index...

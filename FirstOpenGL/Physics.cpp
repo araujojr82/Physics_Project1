@@ -26,9 +26,9 @@ bool PenetrationTestSphereSphere( cGameObject* pA, cGameObject* pB, double delta
 void bounceSpheres( cGameObject* pA, cGameObject* pB )
 {
 	float deltaMass, deltaVelX_2, a,
-		deltaPosX, deltaPosZ, 
-		deltaVelX, deltaVelZ, 
-		velX_cm, velZ_cm;
+		deltaPosX, deltaPosZ,
+		deltaVelX, deltaVelZ;
+//		velX_cm, velZ_cm;
 
 	deltaMass = pB->mass / pA->mass;
 	deltaPosX = pB->position.x - pA->position.x;
@@ -36,8 +36,8 @@ void bounceSpheres( cGameObject* pA, cGameObject* pB )
 	deltaVelX = pB->vel.x - pA->vel.x;
 	deltaVelZ = pB->vel.z - pA->vel.z;
 
-	velX_cm = ( pA->mass * pA->vel.x + pB->mass * pB->vel.x ) / ( pA->mass + pB->mass );
-	velZ_cm = ( pA->mass * pA->vel.z + pB->mass * pB->vel.z ) / ( pA->mass + pB->mass );
+	//velX_cm = ( pA->mass * pA->vel.x + pB->mass * pB->vel.x ) / ( pA->mass + pB->mass );
+	//velZ_cm = ( pA->mass * pA->vel.z + pB->mass * pB->vel.z ) / ( pA->mass + pB->mass );
 
 	// Check division by zero
 	if( deltaPosX == 0.0f )     a = deltaPosZ;
@@ -140,15 +140,8 @@ void bounceSphereAgainstPlane( cGameObject* pA, cGameObject* pB, glm::vec3 tNorm
 	// Linear impulse
 	float invMassSum = pA->inverseMass + pB->inverseMass;
 
-	//if( invMassSum == 0.0f ) {
-	//	return; // Both objects have infinate mass!
-	//}
-
 	// Relative velocity
 	glm::vec3 relativeVel = pB->vel - pA->vel;
-
-	// Relative collision normal
-	//glm::vec3 relativeNorm = glm::vec3( 0.0f, 0.0f, 1.0f ); // = M.normal;
 
 	if( tNormal.x > 1.0f ) tNormal.x = -1.0f;
 	if( tNormal.y > 1.0f ) tNormal.y = -1.0f;
@@ -165,7 +158,6 @@ void bounceSphereAgainstPlane( cGameObject* pA, cGameObject* pB, glm::vec3 tNorm
 		return;
 	}
 
-	//float e = fminf( A.cor, B.cor );
 	float e = fminf( 1.0f , 1.0f ); // Perfect ellastic collision have COR = 1.0
 
 	float numerator = ( -( 1.0f + e ) * glm::dot( relativeVel, tNormal ) );
@@ -179,8 +171,5 @@ void bounceSphereAgainstPlane( cGameObject* pA, cGameObject* pB, glm::vec3 tNorm
 	pA->vel = pA->vel - impulse *  pA->inverseMass;
 	// THIS SHOULD BE ZERO FOR STATIC OBJECTS (INFINITY MASS):
 	pB->vel = pB->vel + impulse *  pB->inverseMass;
-	
-	//// HACK to stop Y velocity
-	//pA->vel.y = 0.0f;
-	//pB->vel.y = 0.0f;
+
 }
