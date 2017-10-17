@@ -39,22 +39,23 @@ int g_GameObjNumber = 0;				// game object vector position number
 int g_LightObjNumber = 0;				// light object vector position
 
 int angle = 90;
-float force = 0.0f;
+float force = 1.0f;
 glm::vec3 speed = glm::vec3( 0.0f );
 glm::vec3 deltaPos = glm::vec3( 0.0f );
 
 int increaseAngle( int angle )
 {
-	if( angle < 360 ) angle += 1; // 0.0027777777777778f;
+	if( angle < 360 ) angle += 1;
 	else angle = 0;
-
+	std::cout << "Angle : " << angle << std::endl;
 	return angle;
 
 }
 int decreaseAngle( int angle )
 {
-	if( angle > 0 ) angle -= 1; // 0.0027777777777778f;
+	if( angle > 0 ) angle -= 1;
 	else angle = 360;
+	std::cout << "Angle : " << angle << std::endl;
 	return angle;
 }
 float increaseForce( float force )
@@ -63,6 +64,7 @@ float increaseForce( float force )
 	else force = 7.0f;
 
 	if( force > 7.0f ) force = 7.0f;
+	std::cout << "Force : " << force << std::endl;
 	return force;
 }
 float decreaseForce( float force )
@@ -71,12 +73,13 @@ float decreaseForce( float force )
 	else force = 1.0f;
 
 	if( force < 0.0f ) force = 1.0f;
+	std::cout << "Force : " << force << std::endl;
 	return force;
 }
 
 glm::vec3 calculateXZVelocity( int angle, float force )
 {
-	glm::vec3 speed;
+	glm::vec3 speed = glm::vec3( 0.0f );
 
 	float shootAngle;
 
@@ -84,6 +87,9 @@ glm::vec3 calculateXZVelocity( int angle, float force )
 
 	speed.x = force * sin( ( shootAngle * M_PI ) / 180 );
 	speed.z = force * cos( ( shootAngle * M_PI ) / 180 );
+
+	if( std::abs( speed.x ) < 0.0001 ) speed.x = 0;
+	if( std::abs( speed.z ) < 0.0001 ) speed.z = 0;
 
 	return speed;
 }
@@ -98,6 +104,37 @@ glm::vec3 calculateCueDeltaPosition( float force, glm::vec3 speed )
 
 	return deltaPos;
 }
+
+glm::vec3 calculateFriction( glm::vec3 vel, float friction )
+{
+	glm::vec3 dFriction = glm::vec3( 0.0f );
+	float revAngle = 0.0f;
+
+	revAngle = angle;
+
+	// Calculate the moving angle using the velocity
+	revAngle = atan2( vel.x, vel.z );
+
+	// Convert it from radians to degrees
+	revAngle = ( revAngle * 180 ) / M_PI;
+
+	// Invert the angle by adding it 180 degrees
+	revAngle += 180;
+	if( revAngle > 360 ) revAngle -= 360;
+	//for( int i = 0; i != 180; i++ ) revAngle = increaseAngle( revAngle );
+	
+	// From the angle calculate the deltaFriction, 
+	// or how much speed it will loose on each direction
+	dFriction.x = friction * sin( ( revAngle * M_PI ) / 180 );
+	dFriction.z = friction * cos( ( revAngle * M_PI ) / 180 );
+
+	if( std::abs( dFriction.x ) < 0.0001 ) dFriction.x = 0;
+	if( std::abs( dFriction.z ) < 0.0001 ) dFriction.z = 0;
+
+
+	return dFriction;
+}
+
 
 cMesh g_MeshPoolTable;
 
@@ -259,44 +296,15 @@ static void key_callback( GLFWwindow* window, int key, int scancode, int action,
 	{
 	case GLFW_KEY_UP:		// Up arrow
 		force = decreaseForce( force );
-		std::cout << "Force : " << force << std::endl;
-
-		//speed = calculateXZVelocity( angle, force );
-		//deltaPos = calculateCueDeltaPosition( force, speed );
-
-		//::g_pTheCueGO->position = ::g_vecGameObjects[2]->position;
-
-		//::g_pTheCueGO->position -= deltaPos;
-
 		break;
 	case GLFW_KEY_DOWN:		// Down arrow
 		force = increaseForce( force );
-		std::cout << "Force : " << force << std::endl;
-
-		//speed = calculateXZVelocity( angle, force );
-		//deltaPos = calculateCueDeltaPosition( force, speed );
-
-		//::g_pTheCueGO->position = ::g_vecGameObjects[2]->position;
-
-		//::g_pTheCueGO->position -= deltaPos;
-
 		break;
 	case GLFW_KEY_LEFT:		// Left arrow
 		angle = increaseAngle( angle );
-		std::cout << "Angle : " << angle << std::endl;
-
-		//if( g_pTheCueGO != NULL )
-		//{
-		//	g_pTheCueGO->orientation2.y = glm::radians( ( float ) angle );
-		//}
 		break;
 	case GLFW_KEY_RIGHT:	// Right arrow
 		angle = decreaseAngle( angle );
-		std::cout << "Angle : " << angle << std::endl;
-		//if( g_pTheCueGO != NULL )
-		//{
-		//	g_pTheCueGO->orientation2.y = glm::radians( ( float ) angle );
-		//}
 		break;
 	}
 
@@ -873,33 +881,18 @@ void PhysicsStep( double deltaTime )
 			}
 
 			// HACK to stop the balls, simulate the frictional force
-			if (pCurGO->vel.x < 0.01f && pCurGO->vel.x > -0.01f)
-			{   // Check to see if the ball is (almost) stopped and stop it (otherwise it will never stop)
-				pCurGO->vel.x = 0.0f;
-			}
+			// Only if the object is moving
+			if( pCurGO->vel != glm::vec3( 0.0f ) )
+			{
+				glm::vec3 deltaVelFriction = glm::vec3( 0.0f );
 
-			// If it's moving, apply the frictional force
-			if (pCurGO->vel.x < 0.0f)
-			{
-				pCurGO->vel.x += g_FRICTION_FORCE;
-			}
-			else if (pCurGO->vel.x > 0.0f)
-			{
-				pCurGO->vel.x -= g_FRICTION_FORCE;
-			}
+				deltaVelFriction = calculateFriction( pCurGO->vel, g_FRICTION_FORCE );
 
-			if (pCurGO->vel.z < 0.01f && pCurGO->vel.z > -0.01f)
-			{
-				pCurGO->vel.z = 0.0f;
-			}
+				pCurGO->vel += deltaVelFriction;
 
-			if (pCurGO->vel.z < 0.0f)
-			{
-				pCurGO->vel.z += g_FRICTION_FORCE;
-			}
-			else if (pCurGO->vel.z > 0.0f)
-			{
-				pCurGO->vel.z -= g_FRICTION_FORCE;
+				// Check to see if the ball is (almost) stopped and stop it (otherwise it will never stop)
+				if( std::abs( pCurGO->vel.x ) < 0.01f ) pCurGO->vel.x = 0.0f;
+				if( std::abs( pCurGO->vel.z ) < 0.01f ) pCurGO->vel.z = 0.0f;
 			}
 
 			// HACK (Ground is table (game object 0)
