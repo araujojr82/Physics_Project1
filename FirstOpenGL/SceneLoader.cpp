@@ -160,7 +160,7 @@ bool LoadModelsIntoScene(std::string &error)
 	// Add the cue stick, independent of the loaded objects file.
 	cGameObject* pTempGO = new cGameObject();
 	pTempGO->scale = 1.0f;
-	pTempGO->position = glm::vec3( 0.0f, 0.26f, 0.0f );
+	pTempGO->position = ::g_vecGameObjects[2]->position;
 	pTempGO->diffuseColour = glm::vec4(7.0f, 7.0f, 0.0f, 1.0f);
 	pTempGO->meshName = "cue";
 	pTempGO->typeOfObject = eTypeOfObject::CUE;

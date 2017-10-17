@@ -38,10 +38,12 @@
 int g_GameObjNumber = 0;				// game object vector position number 
 int g_LightObjNumber = 0;				// light object vector position
 
-int angle = 0;
-float speed = 7.0f;
+int angle = 90;
+float force = 0.0f;
+glm::vec3 speed = glm::vec3( 0.0f );
+glm::vec3 deltaPos = glm::vec3( 0.0f );
 
-float increaseAngle( float angle )
+int increaseAngle( int angle )
 {
 	if( angle < 360 ) angle += 1; // 0.0027777777777778f;
 	else angle = 0;
@@ -49,27 +51,52 @@ float increaseAngle( float angle )
 	return angle;
 
 }
-float decreaseAngle( float angle )
+int decreaseAngle( int angle )
 {
 	if( angle > 0 ) angle -= 1; // 0.0027777777777778f;
 	else angle = 360;
 	return angle;
 }
-float increaseSpeed( float speed )
+float increaseForce( float force )
 {
-	if( speed < 7.0f ) speed += 0.1f;
-	else speed = 7.0f;
+	if( force < 7.0f ) force += 0.1f;
+	else force = 7.0f;
 
-	if( speed > 7.0f ) speed = 7.0f;
+	if( force > 7.0f ) force = 7.0f;
+	return force;
+}
+float decreaseForce( float force )
+{
+	if( force > 0.0f ) force -= 0.1f;
+	else force = 1.0f;
+
+	if( force < 0.0f ) force = 1.0f;
+	return force;
+}
+
+glm::vec3 calculateXZVelocity( int angle, float force )
+{
+	glm::vec3 speed;
+
+	float shootAngle;
+
+	shootAngle = angle;
+
+	speed.x = force * sin( ( shootAngle * M_PI ) / 180 );
+	speed.z = force * cos( ( shootAngle * M_PI ) / 180 );
+
 	return speed;
 }
-float decreaseSpeed( float speed )
-{
-	if( speed > 1.0f ) speed -= 0.1f;
-	else speed = 1.0f;
 
-	if( speed < 1.0f ) speed = 1.0f;
-	return speed;
+
+glm::vec3 calculateCueDeltaPosition( float force, glm::vec3 speed )
+{
+	glm::vec3 deltaPos = glm::vec3( 0.0f );
+
+	deltaPos.x = ( force / 10 ) * speed.x;
+	deltaPos.z = ( force / 10 ) * speed.z;
+
+	return deltaPos;
 }
 
 cMesh g_MeshPoolTable;
@@ -166,15 +193,16 @@ static void key_callback( GLFWwindow* window, int key, int scancode, int action,
 	// "Shoot" the white ball
 	if( key == GLFW_KEY_SPACE && action == GLFW_PRESS )
 	{
-		float speedX, speedZ, shootAngle;
-
-		shootAngle = angle;
-
-		speedX = speed * sin( ( shootAngle * M_PI ) / 180 );
-		speedZ = speed * cos( ( shootAngle * M_PI ) / 180 );
+		glm::vec3 speed;
+		speed = calculateXZVelocity( angle, force );
 		
-		::g_vecGameObjects[2]->vel.x = speedX;
-		::g_vecGameObjects[2]->vel.z = speedZ;
+		::g_vecGameObjects[2]->vel.x = speed.x;
+		::g_vecGameObjects[2]->vel.z = speed.z;
+
+		glm::vec3 deltaPos = calculateCueDeltaPosition( force, speed );
+		::g_pTheCueGO->position += deltaPos;
+
+		force = 1.0f;
 
 	}
 
@@ -230,29 +258,45 @@ static void key_callback( GLFWwindow* window, int key, int scancode, int action,
 	switch( key )
 	{
 	case GLFW_KEY_UP:		// Up arrow
-		speed = decreaseSpeed( speed );
-		std::cout << "Speed : " << speed << std::endl;
+		force = decreaseForce( force );
+		std::cout << "Force : " << force << std::endl;
+
+		//speed = calculateXZVelocity( angle, force );
+		//deltaPos = calculateCueDeltaPosition( force, speed );
+
+		//::g_pTheCueGO->position = ::g_vecGameObjects[2]->position;
+
+		//::g_pTheCueGO->position -= deltaPos;
+
 		break;
 	case GLFW_KEY_DOWN:		// Down arrow
-		speed = increaseSpeed( speed );
-		std::cout << "Speed : " << speed << std::endl;
+		force = increaseForce( force );
+		std::cout << "Force : " << force << std::endl;
+
+		//speed = calculateXZVelocity( angle, force );
+		//deltaPos = calculateCueDeltaPosition( force, speed );
+
+		//::g_pTheCueGO->position = ::g_vecGameObjects[2]->position;
+
+		//::g_pTheCueGO->position -= deltaPos;
+
 		break;
 	case GLFW_KEY_LEFT:		// Left arrow
 		angle = increaseAngle( angle );
 		std::cout << "Angle : " << angle << std::endl;
 
-		if( g_pTheCueGO != NULL )
-		{
-			g_pTheCueGO->orientation2.y = glm::radians( (float) angle );
-		}
+		//if( g_pTheCueGO != NULL )
+		//{
+		//	g_pTheCueGO->orientation2.y = glm::radians( ( float ) angle );
+		//}
 		break;
 	case GLFW_KEY_RIGHT:	// Right arrow
 		angle = decreaseAngle( angle );
 		std::cout << "Angle : " << angle << std::endl;
-		if( g_pTheCueGO != NULL )
-		{
-			g_pTheCueGO->orientation2.y = glm::radians( ( float ) angle );
-		}
+		//if( g_pTheCueGO != NULL )
+		//{
+		//	g_pTheCueGO->orientation2.y = glm::radians( ( float ) angle );
+		//}
 		break;
 	}
 
@@ -774,7 +818,7 @@ void PhysicsStep( double deltaTime )
 				case eTypeOfObject::PLANE:
 					
 					// HACK TO CHECK ONLY AGAINST THE TABLE SIDES OBJECT
-					if( pOtherObject->physicsMeshName =	
+					if( pOtherObject->physicsMeshName == "physics_poolsides" )
 					{ // It's the sides
 						for( int i_point = 0; i_point != ::g_vecPoints.size(); i_point++ )
 						{	// Check if any point is in contact with the pCurGO
@@ -877,11 +921,17 @@ void PhysicsStep( double deltaTime )
 		//  // HACK, set position of cue depending on White ball position
 		if( g_vecGameObjects[2]->vel == glm::vec3( 0.0f ) )
 		{
-			g_pTheCueGO->position = ::g_vecGameObjects[2]->position;	// [2] ITS THE WHITE BALL! (Hardcoded, for now)
+			::g_pTheCueGO->position = ::g_vecGameObjects[2]->position;	// [2] ITS THE WHITE BALL! (Hardcoded, for now)
+			::g_pTheCueGO->orientation2.y = glm::radians( ( float ) angle );
+			speed = calculateXZVelocity( angle, force );
+			deltaPos = calculateCueDeltaPosition( force, speed );
+			::g_pTheCueGO->position -= deltaPos;
+
 		}
 		else
 		{ // At least one ball is in movement so we "hide away" the cue
-			g_pTheCueGO->position = glm::vec3( 0.0f, 100.0f, 0.0f );
+			//g_pTheCueGO->position = glm::vec3( 0.0f, 100.0f, 0.0f );
+			::g_pTheCueGO->position.y = 100.0f;
 		}
 	}
 
