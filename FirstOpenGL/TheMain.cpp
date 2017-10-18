@@ -31,9 +31,6 @@
 #include <random>
 #include <chrono>
 
-#define _USE_MATH_DEFINES
-#include <math.h>
-
 // Euclides: Control selected object for movement
 int g_GameObjNumber = 0;				// game object vector position number 
 int g_LightObjNumber = 0;				// light object vector position
@@ -77,24 +74,6 @@ float decreaseForce( float force )
 	return force;
 }
 
-glm::vec3 calculateXZVelocity( int angle, float force )
-{
-	glm::vec3 speed = glm::vec3( 0.0f );
-
-	float shootAngle;
-
-	shootAngle = angle;
-
-	speed.x = force * sin( ( shootAngle * M_PI ) / 180 );
-	speed.z = force * cos( ( shootAngle * M_PI ) / 180 );
-
-	if( std::abs( speed.x ) < 0.0001 ) speed.x = 0;
-	if( std::abs( speed.z ) < 0.0001 ) speed.z = 0;
-
-	return speed;
-}
-
-
 glm::vec3 calculateCueDeltaPosition( float force, glm::vec3 speed )
 {
 	glm::vec3 deltaPos = glm::vec3( 0.0f );
@@ -104,37 +83,6 @@ glm::vec3 calculateCueDeltaPosition( float force, glm::vec3 speed )
 
 	return deltaPos;
 }
-
-glm::vec3 calculateFriction( glm::vec3 vel, float friction )
-{
-	glm::vec3 dFriction = glm::vec3( 0.0f );
-	float revAngle = 0.0f;
-
-	revAngle = angle;
-
-	// Calculate the moving angle using the velocity
-	revAngle = atan2( vel.x, vel.z );
-
-	// Convert it from radians to degrees
-	revAngle = ( revAngle * 180 ) / M_PI;
-
-	// Invert the angle by adding it 180 degrees
-	revAngle += 180;
-	if( revAngle > 360 ) revAngle -= 360;
-	//for( int i = 0; i != 180; i++ ) revAngle = increaseAngle( revAngle );
-	
-	// From the angle calculate the deltaFriction, 
-	// or how much speed it will loose on each direction
-	dFriction.x = friction * sin( ( revAngle * M_PI ) / 180 );
-	dFriction.z = friction * cos( ( revAngle * M_PI ) / 180 );
-
-	if( std::abs( dFriction.x ) < 0.0001 ) dFriction.x = 0;
-	if( std::abs( dFriction.z ) < 0.0001 ) dFriction.z = 0;
-
-
-	return dFriction;
-}
-
 
 cMesh g_MeshPoolTable;
 
@@ -886,7 +834,7 @@ void PhysicsStep( double deltaTime )
 			{
 				glm::vec3 deltaVelFriction = glm::vec3( 0.0f );
 
-				deltaVelFriction = calculateFriction( pCurGO->vel, g_FRICTION_FORCE );
+				deltaVelFriction = calculateFriction( pCurGO->angle, g_FRICTION_FORCE );
 
 				pCurGO->vel += deltaVelFriction;
 

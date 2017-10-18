@@ -52,6 +52,10 @@ void bounceSpheres( cGameObject* pA, cGameObject* pB )
 	pB->vel.x += deltaVelX_2;
 	pB->vel.z += a * deltaVelX_2;
 
+	//Update the movement angles
+	pA->angle = calculateMovAngle( pA->vel );
+	pB->angle = calculateMovAngle( pB->vel );
+
 	return;
 }
 
@@ -114,26 +118,26 @@ glm::vec3 cPhysTriangle::ClosestPtPointTriangle( glm::vec3 p, glm::vec3 a,
 	return a + ab * v + ac * w; // = u*a + v*b + w*c, u = va * denom = 1.0f - v - w
 }
 
-bool AlmostEqualRelativeAndAbs( float A, float B ) {
-	
-	float maxDiff = 0.005f;
-	float maxRelDiff = FLT_EPSILON;
-
-	// Check if the numbers are really close -- needed when comparing numbers near zero.
-	float diff = fabs( A - B );
-	if( diff <= maxDiff ) {
-		return true;
-	}
-
-	A = fabs( A );
-	B = fabs( B );
-	float largest = ( B > A ) ? B : A;
-
-	if( diff <= largest * maxRelDiff ) {
-		return true;
-	}
-	return false;
-}
+//bool AlmostEqualRelativeAndAbs( float A, float B ) {
+//	
+//	float maxDiff = 0.005f;
+//	float maxRelDiff = FLT_EPSILON;
+//
+//	// Check if the numbers are really close -- needed when comparing numbers near zero.
+//	float diff = fabs( A - B );
+//	if( diff <= maxDiff ) {
+//		return true;
+//	}
+//
+//	A = fabs( A );
+//	B = fabs( B );
+//	float largest = ( B > A ) ? B : A;
+//
+//	if( diff <= largest * maxRelDiff ) {
+//		return true;
+//	}
+//	return false;
+//}
 
 void bounceSphereAgainstPlane( cGameObject* pA, cGameObject* pB, glm::vec3 tNormal )
 {
@@ -172,4 +176,61 @@ void bounceSphereAgainstPlane( cGameObject* pA, cGameObject* pB, glm::vec3 tNorm
 	// THIS SHOULD BE ZERO FOR STATIC OBJECTS (INFINITY MASS):
 	pB->vel = pB->vel + impulse *  pB->inverseMass;
 
+	//Update the movement angles
+	pA->angle = calculateMovAngle( pA->vel );
+	pB->angle = calculateMovAngle( pB->vel );
+
+}
+
+float calculateMovAngle( glm::vec3 vel )
+{
+	float movAngle = 0.0f;
+
+	// Calculate the moving angle using the velocity
+	movAngle = atan2( vel.x, vel.z );
+
+	// Convert it from radians to degrees
+	movAngle = ( movAngle * 180 ) / M_PI;
+
+	return movAngle;
+}
+
+glm::vec3 calculateFriction( float angle, float friction )
+{
+	glm::vec3 dFriction = glm::vec3( 0.0f );
+	float revAngle = 0.0f;
+
+	revAngle = angle;
+
+	// Invert the angle by adding 180 degrees to it
+	revAngle += 180;
+	if( revAngle > 360 ) revAngle -= 360;
+	//for( int i = 0; i != 180; i++ ) revAngle = increaseAngle( revAngle );
+
+	// From the angle calculate the deltaFriction, 
+	// or how much speed it will loose on each direction
+	dFriction.x = friction * sin( ( revAngle * M_PI ) / 180 );
+	dFriction.z = friction * cos( ( revAngle * M_PI ) / 180 );
+
+	if( std::abs( dFriction.x ) < 0.0001 ) dFriction.x = 0;
+	if( std::abs( dFriction.z ) < 0.0001 ) dFriction.z = 0;
+
+	return dFriction;
+}
+
+glm::vec3 calculateXZVelocity( int angle, float force )
+{
+	glm::vec3 speed = glm::vec3( 0.0f );
+
+	float shootAngle;
+
+	shootAngle = angle;
+
+	speed.x = force * sin( ( shootAngle * M_PI ) / 180 );
+	speed.z = force * cos( ( shootAngle * M_PI ) / 180 );
+
+	if( std::abs( speed.x ) < 0.0001 ) speed.x = 0;
+	if( std::abs( speed.z ) < 0.0001 ) speed.z = 0;
+
+	return speed;
 }

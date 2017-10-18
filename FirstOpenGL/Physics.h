@@ -3,6 +3,9 @@
 
 #include <glm/vec3.hpp>
 
+#define _USE_MATH_DEFINES
+#include <math.h>
+
 //#include "cGameObject.h"
 class cGameObject;
 
@@ -21,6 +24,12 @@ void bounceSpheres( cGameObject* pA, cGameObject* pB );
 
 void bounceSphereAgainstPlane( cGameObject* pA, cGameObject* pB, glm::vec3 tNormal );
 
-bool AlmostEqualRelativeAndAbs( float A, float B );
+//bool AlmostEqualRelativeAndAbs( float A, float B );
+
+glm::vec3 calculateFriction( float angle, float friction );
+
+float calculateMovAngle( glm::vec3 vel );
+
+glm::vec3 calculateXZVelocity( int angle, float force );
 
 #endif
