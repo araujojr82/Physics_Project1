@@ -26,7 +26,7 @@ void bounceSphereAgainstPlane( cGameObject* pA, cGameObject* pB, glm::vec3 tNorm
 
 //bool AlmostEqualRelativeAndAbs( float A, float B );
 
-glm::vec3 calculateFriction( float angle, float friction );
+glm::vec3 calculateFriction( float angle, glm::vec3 speed, float friction );
 
 float calculateMovAngle( glm::vec3 vel );
 

@@ -834,7 +834,7 @@ void PhysicsStep( double deltaTime )
 			{
 				glm::vec3 deltaVelFriction = glm::vec3( 0.0f );
 
-				deltaVelFriction = calculateFriction( pCurGO->angle, g_FRICTION_FORCE );
+				deltaVelFriction = calculateFriction( pCurGO->angle, pCurGO->vel, g_FRICTION_FORCE );
 
 				pCurGO->vel += deltaVelFriction;
 

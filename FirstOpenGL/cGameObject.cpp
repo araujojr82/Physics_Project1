@@ -13,7 +13,7 @@ cGameObject::cGameObject()
 
 	this->vel = glm::vec3( 0.0f );
 	this->accel = glm::vec3( 0.0f );
-	this->angle = 0.0f;
+	this->angle = NULL;
 
 	// If you aren't sure what the 4th value should be,
 	// make it a 1.0f ("alpha" or transparecy)

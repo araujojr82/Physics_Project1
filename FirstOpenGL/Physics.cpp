@@ -195,12 +195,13 @@ float calculateMovAngle( glm::vec3 vel )
 	return movAngle;
 }
 
-glm::vec3 calculateFriction( float angle, float friction )
+glm::vec3 calculateFriction( float angle, glm::vec3 speed, float friction )
 {
 	glm::vec3 dFriction = glm::vec3( 0.0f );
 	float revAngle = 0.0f;
 
-	revAngle = angle;
+	if( angle == NULL )	revAngle = calculateMovAngle( speed );
+	else revAngle = angle;
 
 	// Invert the angle by adding 180 degrees to it
 	revAngle += 180;
